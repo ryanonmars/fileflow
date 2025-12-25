@@ -1,5 +1,5 @@
 use crate::config::{Config, PendingFile};
-use crate::file_organizer::{organize_file, organize_file_to_destination};
+use crate::file_organizer::organize_file_to_destination;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -213,9 +213,22 @@ impl FileWatcher {
         };
         
         let mut pending = pending_files.lock().unwrap();
-        pending.push(pending_file.clone());
+        // Check if file is already in the pending list to avoid duplicates
+        let file_path_str = pending_file.path.clone();
+        if !pending.iter().any(|f| f.path == file_path_str) {
+            pending.push(pending_file.clone());
+        } else {
+            // File already exists, don't add duplicate
+            return Ok(());
+        }
         
-        let _ = event_tx.send(format!("file_queued:{}", path.display()));
+        let notification_data = format!(
+            "file_queued:{}|{}|{}",
+            path.display(),
+            file_name,
+            size
+        );
+        let _ = event_tx.send(notification_data);
         
         Ok(())
     }

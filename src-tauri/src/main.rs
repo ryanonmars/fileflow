@@ -4,16 +4,117 @@ mod file_organizer;
 mod file_watcher;
 
 use commands::*;
+use tauri::tray::TrayIconBuilder;
+use tauri::Manager;
+use tauri::menu::{Menu, MenuItem};
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .setup(|_app| {
-            init_watcher().map_err(|e| {
+        .plugin(tauri_plugin_notification::init())
+        .setup(|app| {
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+            let show_item = MenuItem::with_id(app, "show", "Show Settings", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .tooltip("Folder Watcher")
+                .on_menu_event(move |app, event| {
+                    match event.id.as_ref() {
+                        "quit" => {
+                            std::process::exit(0);
+                        }
+                        "show" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        _ => {}
+                    }
+                })
+                .on_tray_icon_event(move |tray, event| {
+                    use tauri::tray::{TrayIconEvent, MouseButton};
+                    if let TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
+                        if let Some(window) = tray.app_handle().get_webview_window("main") {
+                            if window.is_visible().unwrap_or(false) {
+                                let _ = window.hide();
+                            } else {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                })
+                .build(app)?;
+
+            let window = app.get_webview_window("main").unwrap();
+            let window_clone = window.clone();
+            window.on_window_event(move |event| {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    let _ = window_clone.hide();
+                    api.prevent_close();
+                }
+            });
+
+            // Ensure modal window exists - access it to trigger creation from config
+            if let Some(modal_window) = app.get_webview_window("file-organization") {
+                let modal_window_clone = modal_window.clone();
+                modal_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { .. } = event {
+                        // Allow modal to close normally
+                    }
+                });
+            }
+
+            let event_tx = init_watcher().map_err(|e| {
                 eprintln!("Failed to initialize watcher: {}", e);
                 e
             })?;
+
+            let app_handle = app.handle().clone();
+            let mut rx = event_tx.subscribe();
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                let handle = rt.handle().clone();
+                handle.spawn(async move {
+                    loop {
+                        if let Ok(msg) = rx.recv().await {
+                            if msg.starts_with("file_queued:") {
+                                let parts: Vec<&str> = msg.splitn(3, '|').collect();
+                                if parts.len() >= 3 {
+                                    let file_path = parts[0].strip_prefix("file_queued:").unwrap_or("");
+                                    let file_name = parts[1];
+                                    let file_size: u64 = parts[2].parse().unwrap_or(0);
+                                    
+                                    let app_for_modal = app_handle.clone();
+                                    let file_path_clone = file_path.to_string();
+                                    let file_name_clone = file_name.to_string();
+                                    
+                                    // Show the modal window
+                                    if let Err(e) = commands::show_file_organization_modal(
+                                        app_for_modal,
+                                        file_path_clone,
+                                        file_name_clone,
+                                        file_size,
+                                    ) {
+                                        eprintln!("Failed to show file organization modal: {}", e);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                // Keep runtime alive
+                rt.block_on(std::future::pending::<()>());
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -25,7 +126,12 @@ fn main() {
             set_organization_mode,
             get_pending_files,
             process_pending_file,
-            move_file_manual
+            move_file_manual,
+            show_file_notification,
+            process_file_from_notification,
+            open_settings_window,
+            show_file_organization_modal,
+            close_file_organization_modal
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

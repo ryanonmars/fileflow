@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Organization</title>
+    <script>
+      // Ensure we're on the correct page
+      if (window.location.pathname !== '/file-modal.html' && !window.location.pathname.includes('file-modal.html')) {
+        console.error('Wrong page loaded:', window.location.pathname);
+        // Don't redirect here, let the component handle it
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/file-modal.js"></script>
+  </body>
+</html>
+

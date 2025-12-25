@@ -94,6 +94,11 @@
 <section class="status-panel">
   <h2>Watched Folder</h2>
   
+  <p class="background-note">
+    The app runs in the background. Close this window to hide it in the menu bar. 
+    Files will be processed automatically or you'll receive notifications.
+  </p>
+  
   <div class="folder-selector">
     <input type="text" bind:value={watchedFolder} placeholder="No folder selected" readonly />
     <button on:click={selectFolder}>Select Folder</button>
@@ -138,6 +143,16 @@
     margin-bottom: 1rem;
     font-size: 1.5rem;
     color: #e0e0e0;
+  }
+
+  .background-note {
+    color: #aaa;
+    font-size: 0.9em;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #3a3a3a;
+    border-radius: 4px;
+    border: 1px solid #555;
   }
 
   .folder-selector {

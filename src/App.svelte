@@ -2,9 +2,29 @@
   import ConfigPanel from './ConfigPanel.svelte';
   import StatusPanel from './StatusPanel.svelte';
   import PendingFilesPanel from './PendingFilesPanel.svelte';
+  import FileOrganizationModal from './FileOrganizationModal.svelte';
+  import { onMount } from 'svelte';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
 
   let error = '';
   let success = '';
+  let isModalWindow = false;
+
+  onMount(async () => {
+    const appWindow = getCurrentWindow();
+    
+    // Check if this is the modal window - label is a property
+    const label = appWindow.label;
+    
+    if (label === 'file-organization') {
+      isModalWindow = true;
+    } else {
+      // Only set up close listener for main window
+      appWindow.listen('tauri://close-requested', async () => {
+        await appWindow.hide();
+      });
+    }
+  });
 
   function handleError(msg) {
     error = msg;
@@ -19,21 +39,26 @@
   }
 </script>
 
-<main>
-  <h1>Folder Watcher</h1>
-  
-  {#if error}
-    <div class="message error">{error}</div>
-  {/if}
-  
-  {#if success}
-    <div class="message success">{success}</div>
-  {/if}
+{#if isModalWindow}
+  <!-- Render the modal component directly - it will load pending files itself -->
+  <FileOrganizationModal />
+{:else}
+  <main>
+    <h1>Folder Watcher</h1>
+    
+    {#if error}
+      <div class="message error">{error}</div>
+    {/if}
+    
+    {#if success}
+      <div class="message success">{success}</div>
+    {/if}
 
-  <StatusPanel onError={handleError} onSuccess={handleSuccess} />
-  <PendingFilesPanel onError={handleError} onSuccess={handleSuccess} />
-  <ConfigPanel onError={handleError} onSuccess={handleSuccess} />
-</main>
+    <StatusPanel onError={handleError} onSuccess={handleSuccess} />
+    <PendingFilesPanel onError={handleError} onSuccess={handleSuccess} />
+    <ConfigPanel onError={handleError} onSuccess={handleSuccess} />
+  </main>
+{/if}
 
 <style>
   main {

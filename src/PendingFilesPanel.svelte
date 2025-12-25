@@ -13,6 +13,9 @@
     pollingInterval = setInterval(async () => {
       await loadPendingFiles();
     }, 2000);
+
+    // Modal window is now shown automatically by the backend
+    // No need to listen for file-queued events here
   });
 
   onDestroy(() => {
@@ -51,7 +54,7 @@
       if (selected) {
         const destination = Array.isArray(selected) ? selected[0] : selected;
         await invoke('process_pending_file', { 
-          filePath, 
+          filePath: filePath, 
           destination: destination 
         });
         await loadPendingFiles();
@@ -65,7 +68,7 @@
   async function skipFile(filePath) {
     try {
       await invoke('process_pending_file', { 
-        filePath, 
+        filePath: filePath, 
         destination: null 
       });
       await loadPendingFiles();
@@ -78,6 +81,11 @@
 
 <section class="pending-panel">
   <h2>Pending Files</h2>
+  
+  <p class="notification-note">
+    Files queued in "Ask" or "Both" mode will also trigger system notifications. 
+    You can process them here or via the notifications.
+  </p>
   
   {#if pendingFiles.length === 0}
     <div class="empty-state">
@@ -122,6 +130,16 @@
     margin-bottom: 1rem;
     font-size: 1.5rem;
     color: #e0e0e0;
+  }
+
+  .notification-note {
+    color: #aaa;
+    font-size: 0.9em;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #3a3a3a;
+    border-radius: 4px;
+    border: 1px solid #555;
   }
 
   .empty-state {

@@ -11,11 +11,27 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Folder Watcher",
         "width": 800,
         "height": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "visible": true,
+        "skipTaskbar": false
+      },
+      {
+        "label": "file-organization",
+        "title": "File Organization",
+        "width": 500,
+        "height": 300,
+        "resizable": false,
+        "fullscreen": false,
+        "visible": false,
+        "skipTaskbar": true,
+        "center": true,
+        "decorations": true,
+        "url": "index.html"
       }
     ],
     "security": {
@@ -25,7 +41,7 @@
           "identifier": "main-capability",
           "description": "Main window capabilities",
           "windows": ["main"],
-          "permissions": [
+            "permissions": [
             "core:default",
             "dialog:allow-open",
             "dialog:default",
@@ -33,6 +49,27 @@
             "fs:allow-write",
             "fs:read-files",
             "fs:read-meta",
+            {
+              "identifier": "fs:scope",
+              "allow": ["**"]
+            },
+            "notification:allow-is-permission-granted",
+            "notification:allow-request-permission",
+            "notification:allow-show",
+            "notification:default"
+          ]
+        },
+        {
+          "identifier": "modal-capability",
+          "description": "File organization modal window capabilities",
+          "windows": ["file-organization"],
+          "permissions": [
+            "core:default",
+            "dialog:allow-open",
+            "dialog:default",
+            "fs:allow-read",
+            "fs:allow-write",
+            "fs:read-files",
             {
               "identifier": "fs:scope",
               "allow": ["**"]
