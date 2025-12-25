@@ -8,9 +8,11 @@
   let watchedFolder = '';
   let isWatching = false;
   let config = null;
+  let organizationMode = 'auto';
 
   onMount(async () => {
     await loadConfig();
+    await loadOrganizationMode();
   });
 
   async function loadConfig() {
@@ -20,6 +22,23 @@
       isWatching = watchedFolder !== '';
     } catch (err) {
       onError(`Failed to load config: ${err}`);
+    }
+  }
+
+  async function loadOrganizationMode() {
+    try {
+      organizationMode = await invoke('get_organization_mode');
+    } catch (err) {
+      onError(`Failed to load organization mode: ${err}`);
+    }
+  }
+
+  async function changeOrganizationMode() {
+    try {
+      await invoke('set_organization_mode', { mode: organizationMode });
+      onSuccess(`Organization mode set to ${organizationMode}`);
+    } catch (err) {
+      onError(`Failed to set organization mode: ${err}`);
     }
   }
 
@@ -80,6 +99,15 @@
     <button on:click={selectFolder}>Select Folder</button>
   </div>
 
+  <div class="mode-selector">
+    <label for="org-mode">Organization Mode:</label>
+    <select id="org-mode" bind:value={organizationMode} on:change={changeOrganizationMode}>
+      <option value="auto">Auto</option>
+      <option value="ask">Ask</option>
+      <option value="both">Both</option>
+    </select>
+  </div>
+
   <div class="controls">
     <button on:click={startWatching} disabled={isWatching || !watchedFolder}>
       Start Watching
@@ -120,6 +148,23 @@
 
   .folder-selector input {
     flex: 1;
+  }
+
+  .mode-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .mode-selector label {
+    min-width: 140px;
+    color: #e0e0e0;
+  }
+
+  .mode-selector select {
+    flex: 1;
+    max-width: 200px;
   }
 
   .controls {

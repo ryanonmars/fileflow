@@ -1,6 +1,7 @@
 <script>
   import ConfigPanel from './ConfigPanel.svelte';
   import StatusPanel from './StatusPanel.svelte';
+  import PendingFilesPanel from './PendingFilesPanel.svelte';
 
   let error = '';
   let success = '';
@@ -30,6 +31,7 @@
   {/if}
 
   <StatusPanel onError={handleError} onSuccess={handleSuccess} />
+  <PendingFilesPanel onError={handleError} onSuccess={handleSuccess} />
   <ConfigPanel onError={handleError} onSuccess={handleSuccess} />
 </main>
 

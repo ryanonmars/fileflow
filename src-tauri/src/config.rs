@@ -26,8 +26,19 @@ pub struct Rule {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PendingFile {
+    pub path: String,
+    pub name: String,
+    pub extension: String,
+    pub size: u64,
+    pub detected_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub watched_folder: Option<String>,
+    #[serde(default = "default_organization_mode")]
+    pub organization_mode: String,
     #[serde(default)]
     pub rules: Vec<Rule>,
     // Keep mappings for backward compatibility during migration
@@ -35,10 +46,15 @@ pub struct Config {
     pub mappings: std::collections::HashMap<String, String>,
 }
 
+fn default_organization_mode() -> String {
+    "auto".to_string()
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
             watched_folder: None,
+            organization_mode: "auto".to_string(),
             rules: Vec::new(),
             mappings: std::collections::HashMap::new(),
         }

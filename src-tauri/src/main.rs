@@ -20,7 +20,12 @@ fn main() {
             get_config,
             save_config,
             start_watching,
-            stop_watching
+            stop_watching,
+            get_organization_mode,
+            set_organization_mode,
+            get_pending_files,
+            process_pending_file,
+            move_file_manual
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
