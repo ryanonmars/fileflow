@@ -1,0 +1,54 @@
+{
+  "productName": "Folder Watcher",
+  "version": "0.1.0",
+  "identifier": "com.folderwatcher.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Folder Watcher",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "main-capability",
+          "description": "Main window capabilities",
+          "windows": ["main"],
+          "permissions": [
+            "core:default",
+            "dialog:allow-open",
+            "dialog:default",
+            "fs:allow-read",
+            "fs:allow-write",
+            "fs:read-files",
+            "fs:read-meta",
+            {
+              "identifier": "fs:scope",
+              "allow": ["**"]
+            }
+          ]
+        }
+      ]
+    },
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": false,
+    "targets": "all",
+    "icon": [
+      "icons/icon.png"
+    ]
+  }
+}
+
