@@ -94,11 +94,6 @@
 <section class="status-panel">
   <h2>Watched Folder</h2>
   
-  <p class="background-note">
-    The app runs in the background. Close this window to hide it in the menu bar. 
-    Files will be processed automatically or you'll receive notifications.
-  </p>
-  
   <div class="folder-selector">
     <input type="text" bind:value={watchedFolder} placeholder="No folder selected" readonly />
     <button on:click={selectFolder}>Select Folder</button>
@@ -132,86 +127,89 @@
 
 <style>
   .status-panel {
-    background: #2d2d2d;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    border: 1px solid #444;
+    background: #252525;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    border: 1px solid #333;
   }
 
   h2 {
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: #e0e0e0;
-  }
-
-  .background-note {
-    color: #aaa;
-    font-size: 0.9em;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: #3a3a3a;
-    border-radius: 4px;
-    border: 1px solid #555;
   }
 
   .folder-selector {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
 
   .folder-selector input {
     flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9em;
   }
 
   .mode-selector {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   .mode-selector label {
-    min-width: 140px;
-    color: #e0e0e0;
+    font-size: 0.9em;
+    color: #bbb;
+    min-width: 120px;
   }
 
   .mode-selector select {
-    flex: 1;
-    max-width: 200px;
+    flex: 0 0 auto;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9em;
+    min-width: 120px;
   }
 
   .controls {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9em;
   }
 
   .status-indicator {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem;
-    background: #1a1a1a;
-    border-radius: 4px;
-    border: 1px solid #444;
+    padding: 0.5rem 0.75rem;
+    background: #1f1f1f;
+    border-radius: 3px;
+    border: 1px solid #333;
+    font-size: 0.9em;
+    margin-top: 0.5rem;
   }
 
   .dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #666;
+    flex-shrink: 0;
   }
 
   .dot.active {
     background: #4caf50;
-    animation: pulse 2s infinite;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  .status-indicator span:last-child {
+    color: #bbb;
+    font-size: 0.9em;
   }
 </style>

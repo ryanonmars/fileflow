@@ -262,36 +262,37 @@
 
 <style>
   .config-panel {
-    background: #2d2d2d;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #444;
+    background: #252525;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #333;
   }
 
   h2 {
-    margin-bottom: 0.5rem;
-    font-size: 1.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: #e0e0e0;
   }
 
   .description {
-    color: #aaa;
-    margin-bottom: 1.5rem;
-    font-size: 0.9em;
+    color: #999;
+    margin-bottom: 0.75rem;
+    font-size: 0.85em;
   }
 
   .rules-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .rule-item {
-    background: #1a1a1a;
-    border-radius: 8px;
+    background: #1f1f1f;
+    border-radius: 3px;
     padding: 0;
-    border: 1px solid #444;
+    border: 1px solid #333;
     overflow: hidden;
   }
 
@@ -299,10 +300,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 0.75rem;
     user-select: none;
     background: #252525;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #333;
     transition: background-color 0.2s;
     cursor: pointer;
   }
@@ -343,12 +344,12 @@
 
   .rule-name {
     flex: 1;
-    background: #2d2d2d;
-    border: 1px solid #444;
+    background: #1f1f1f;
+    border: 1px solid #333;
     color: #e0e0e0;
-    padding: 0.4em 0.6em;
-    border-radius: 4px;
-    font-size: 1em;
+    padding: 0.4rem 0.6rem;
+    border-radius: 3px;
+    font-size: 0.9em;
     font-weight: 500;
     min-width: 150px;
   }
@@ -359,24 +360,25 @@
   }
 
   .remove-btn {
-    background: #4a1a1a;
+    background: transparent;
     color: #ff6b6b;
     border: 1px solid #6a2a2a;
-    padding: 0.4em 0.8em;
-    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
 
   .remove-btn:hover {
-    background: #5a2a2a;
+    background: #4a1a1a;
+    border-color: #7a3a3a;
   }
 
   .rule-content {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
 
   .condition-group {
@@ -386,20 +388,21 @@
   }
 
   .condition-group label {
-    min-width: 80px;
-    font-weight: 500;
-    color: #e0e0e0;
+    min-width: 100px;
+    font-weight: 400;
+    color: #bbb;
+    font-size: 0.9em;
   }
 
   .condition-group select,
   .condition-group input[type="text"],
   .condition-group input[type="date"] {
     flex: 1;
-    padding: 0.5em;
-    border: 1px solid #444;
-    border-radius: 4px;
-    font-size: 1em;
-    background: #2d2d2d;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-size: 0.9em;
+    background: #1f1f1f;
     color: #e0e0e0;
   }
 
@@ -421,12 +424,13 @@
   }
 
   .folder-selector button {
-    padding: 0.5em 1em;
+    padding: 0.5rem 0.75rem;
     background: #4a90e2;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
+    font-size: 0.9em;
   }
 
   .folder-selector button:hover {
@@ -435,12 +439,12 @@
 
   .add-rule-btn {
     width: 100%;
-    padding: 0.75em;
+    padding: 0.6rem;
     background: #4a90e2;
     color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 1em;
+    border-radius: 3px;
+    font-size: 0.9em;
     cursor: pointer;
     font-weight: 500;
   }
@@ -451,10 +455,11 @@
 
   .no-rules {
     text-align: center;
-    padding: 2rem;
+    padding: 1.5rem;
     color: #999;
-    background: #1a1a1a;
-    border-radius: 8px;
-    border: 1px dashed #444;
+    background: #1f1f1f;
+    border-radius: 3px;
+    border: 1px dashed #333;
+    font-size: 0.9em;
   }
 </style>

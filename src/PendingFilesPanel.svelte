@@ -119,49 +119,51 @@
 
 <style>
   .pending-panel {
-    background: #2d2d2d;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    border: 1px solid #444;
+    background: #252525;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    border: 1px solid #333;
   }
 
   h2 {
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: #e0e0e0;
   }
 
   .notification-note {
-    color: #aaa;
-    font-size: 0.9em;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: #3a3a3a;
-    border-radius: 4px;
-    border: 1px solid #555;
+    color: #999;
+    font-size: 0.85em;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: #1f1f1f;
+    border-radius: 3px;
+    border: 1px solid #333;
   }
 
   .empty-state {
     text-align: center;
-    padding: 2rem;
-    color: #aaa;
-    background: #3a3a3a;
-    border-radius: 8px;
-    border: 1px dashed #555;
+    padding: 1.5rem;
+    color: #999;
+    background: #1f1f1f;
+    border-radius: 3px;
+    border: 1px dashed #333;
+    font-size: 0.9em;
   }
 
   .files-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   .file-item {
-    background: #3a3a3a;
-    border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid #555;
+    background: #1f1f1f;
+    border-radius: 3px;
+    padding: 0.75rem;
+    border: 1px solid #333;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -176,15 +178,16 @@
   .file-name {
     font-weight: 500;
     color: #e0e0e0;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     word-break: break-all;
+    font-size: 0.9em;
   }
 
   .file-details {
     display: flex;
-    gap: 1rem;
-    font-size: 0.9em;
-    color: #aaa;
+    gap: 0.75rem;
+    font-size: 0.85em;
+    color: #999;
     flex-wrap: wrap;
   }
 
@@ -203,10 +206,10 @@
     background: #4a90e2;
     color: white;
     border: none;
-    padding: 0.5em 1em;
-    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
 
   .select-btn:hover {
@@ -214,17 +217,18 @@
   }
 
   .skip-btn {
-    background: #3a3a3a;
-    color: #e0e0e0;
-    border: 1px solid #555;
-    padding: 0.5em 1em;
-    border-radius: 4px;
+    background: transparent;
+    color: #bbb;
+    border: 1px solid #444;
+    padding: 0.4rem 0.75rem;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
 
   .skip-btn:hover {
-    background: #4a4a4a;
+    background: #2a2a2a;
+    border-color: #555;
   }
 </style>
 
