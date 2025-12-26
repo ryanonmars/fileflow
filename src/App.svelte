@@ -529,17 +529,31 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: #1a1a1a;
-    color: #e0e0e0;
+    background: #f5f5f7;
+    color: rgba(0, 0, 0, 0.85);
     overflow: hidden;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .app-container {
+      background: #1c1c1e;
+      color: rgba(255, 255, 255, 0.85);
+    }
   }
 
   .tabs {
     display: flex;
-    background: #1a1a1a;
-    border-bottom: 1px solid #333;
+    background: #ffffff;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
     padding: 0;
     flex-shrink: 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tabs {
+      background: #2c2c2e;
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
   }
 
   .tab {
@@ -547,26 +561,48 @@
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    color: #999;
+    color: rgba(0, 0, 0, 0.6);
     cursor: pointer;
-    font-size: 0.9em;
-    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    transition: all 0.15s ease-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tab {
+      color: rgba(255, 255, 255, 0.6);
+    }
   }
 
   .tab:hover {
-    color: #e0e0e0;
+    color: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tab:hover {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.05);
+    }
   }
 
   .tab.active {
-    color: #e0e0e0;
-    border-bottom-color: #4a90e2;
+    color: rgba(0, 0, 0, 0.95);
+    border-bottom-color: #007AFF;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tab.active {
+      color: rgba(255, 255, 255, 0.95);
+    }
   }
 
   .content {
     flex: 1;
     overflow-y: auto;
-    padding: 1.5rem;
-    background: #1a1a1a;
+    padding: 20px;
+    background: transparent;
   }
 
   .tab-content {
@@ -575,135 +611,196 @@
   }
 
   h2 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #e0e0e0;
+    margin: 0 0 20px 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    color: rgba(0, 0, 0, 0.95);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    h2 {
+      color: rgba(255, 255, 255, 0.95);
+    }
   }
 
   .message {
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    font-size: 0.9em;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .error {
-    color: #ff6b6b;
+    color: #FF453A;
+    background: rgba(255, 69, 58, 0.15);
   }
 
   .success {
-    color: #6bff6b;
+    color: #30D158;
+    background: rgba(48, 209, 88, 0.15);
   }
 
   .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;
   }
 
   .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.9em;
-    color: #999;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: -0.01em;
   }
 
   .folder-selector {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
   }
 
   .folder-selector input {
     flex: 1;
-    padding: 0.5rem;
-    font-size: 0.9em;
-    background: #252525;
-    border: 1px solid #333;
-    color: #e0e0e0;
-    border-radius: 3px;
+    padding: 6px 10px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    transition: all 0.15s ease-out;
+  }
+
+  .folder-selector input:focus {
+    outline: none;
+    border-color: #007AFF;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
   }
 
   .form-group select {
-    padding: 0.5rem;
-    font-size: 0.9em;
+    padding: 6px 10px;
+    font-size: 13px;
     min-width: 200px;
-    background: #252525;
-    border: 1px solid #333;
-    color: #e0e0e0;
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    transition: all 0.15s ease-out;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='rgba(255,255,255,0.7)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+  }
+
+  .form-group select:focus {
+    outline: none;
+    border-color: #007AFF;
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
   }
 
   .form-group button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9em;
-    margin-right: 0.5rem;
-    background: #4a90e2;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-right: 8px;
+    background: #007AFF;
     color: white;
     border: none;
-    border-radius: 3px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: all 0.15s ease-out;
+    letter-spacing: -0.01em;
   }
 
   .form-group button:hover:not(:disabled) {
-    background: #357abd;
+    background: #0051D5;
+    transform: translateY(-0.5px);
+  }
+
+  .form-group button:active:not(:disabled) {
+    transform: translateY(0);
   }
 
   .form-group button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 
   .status-indicator {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9em;
-    color: #999;
-    margin-top: 0.5rem;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.7);
+    margin-top: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .status-indicator {
+      color: rgba(255, 255, 255, 0.7);
+    }
   }
 
   .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #666;
+    background: rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
   }
 
   .dot.active {
-    background: #4caf50;
+    background: #30D158;
+    box-shadow: 0 0 8px rgba(48, 209, 88, 0.5);
   }
 
   .rules-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 16px;
+    margin-bottom: 16px;
   }
 
   .rule-item {
-    border-bottom: 1px solid #333;
-    padding-bottom: 1rem;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .rule-item {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
   }
 
   .rule-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 12px;
     cursor: pointer;
   }
 
   .rule-header-left {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 8px;
     flex: 1;
   }
 
   .collapse-btn {
-    color: #999;
-    font-size: 0.8em;
-    transition: transform 0.2s;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 11px;
+    transition: transform 0.2s ease-out;
     pointer-events: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .collapse-btn {
+      color: rgba(255, 255, 255, 0.6);
+    }
   }
 
   .collapse-btn.collapsed {
@@ -712,58 +809,112 @@
 
   .rule-name {
     flex: 1;
-    background: #252525;
-    border: 1px solid #333;
-    color: #e0e0e0;
-    padding: 0.4rem 0.6rem;
-    border-radius: 3px;
-    font-size: 0.9em;
+    background: #ffffff;
+    border: 0.5px solid rgba(0, 0, 0, 0.2);
+    color: rgba(0, 0, 0, 0.9);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
     min-width: 150px;
+    transition: all 0.15s ease-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .rule-name {
+      background: #3a3a3c;
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .rule-name:focus {
+    outline: none;
+    border-color: #007AFF;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
   }
 
   .remove-btn {
     background: transparent;
-    color: #ff6b6b;
-    border: 1px solid #6a2a2a;
-    padding: 0.4rem 0.75rem;
-    border-radius: 3px;
+    color: #FF453A;
+    border: 0.5px solid rgba(255, 69, 58, 0.3);
+    padding: 4px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 12px;
+    transition: all 0.15s ease-out;
   }
 
   .remove-btn:hover {
-    background: #4a1a1a;
+    background: rgba(255, 69, 58, 0.15);
+    border-color: rgba(255, 69, 58, 0.5);
   }
 
   .rule-content {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin-left: 1.5rem;
+    gap: 12px;
+    margin-left: 20px;
   }
 
   .condition-group {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
   }
 
   .condition-group label {
     min-width: 100px;
-    font-size: 0.9em;
-    color: #999;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.7);
     margin: 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .condition-group label {
+      color: rgba(255, 255, 255, 0.7);
+    }
   }
 
   .condition-group select,
   .condition-group input {
     flex: 1;
-    padding: 0.5rem;
-    border: 1px solid #333;
-    border-radius: 3px;
-    font-size: 0.9em;
-    background: #252525;
-    color: #e0e0e0;
+    padding: 6px 10px;
+    border: 0.5px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    font-size: 13px;
+    background: #ffffff;
+    color: rgba(0, 0, 0, 0.9);
+    transition: all 0.15s ease-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .condition-group select,
+    .condition-group input {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: #3a3a3c;
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .condition-group select:focus,
+  .condition-group input:focus {
+    outline: none;
+    border-color: #007AFF;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  }
+
+  .condition-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='rgba(0,0,0,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .condition-group select {
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='rgba(255,255,255,0.7)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
   }
 
   .condition-group .folder-selector {
@@ -771,46 +922,72 @@
   }
 
   .add-rule-btn {
-    padding: 0.6rem 1rem;
-    background: #4a90e2;
+    padding: 8px 16px;
+    background: #007AFF;
     color: white;
     border: none;
-    border-radius: 3px;
-    font-size: 0.9em;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
+    transition: all 0.15s ease-out;
+    letter-spacing: -0.01em;
   }
 
   .add-rule-btn:hover {
-    background: #357abd;
+    background: #0051D5;
+    transform: translateY(-0.5px);
+  }
+
+  .add-rule-btn:active {
+    transform: translateY(0);
   }
 
   .no-rules {
     text-align: center;
-    padding: 2rem;
-    color: #999;
-    font-size: 0.9em;
+    padding: 40px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .no-rules {
+      color: rgba(255, 255, 255, 0.6);
+    }
   }
 
   .empty-state {
     text-align: center;
-    padding: 2rem;
-    color: #999;
-    font-size: 0.9em;
+    padding: 40px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state {
+      color: rgba(255, 255, 255, 0.6);
+    }
   }
 
   .files-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 12px;
   }
 
   .file-item {
-    border-bottom: 1px solid #333;
-    padding-bottom: 1rem;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    gap: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .file-item {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
   }
 
   .file-info {
@@ -820,18 +997,31 @@
 
   .file-name {
     font-weight: 500;
-    color: #e0e0e0;
-    margin-bottom: 0.25rem;
+    color: rgba(0, 0, 0, 0.9);
+    margin-bottom: 4px;
     word-break: break-all;
-    font-size: 0.9em;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .file-name {
+      color: rgba(255, 255, 255, 0.9);
+    }
   }
 
   .file-details {
     display: flex;
-    gap: 0.75rem;
-    font-size: 0.85em;
-    color: #999;
+    gap: 12px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
     flex-wrap: wrap;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .file-details {
+      color: rgba(255, 255, 255, 0.6);
+    }
   }
 
   .file-extension {
@@ -841,35 +1031,59 @@
 
   .file-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     flex-shrink: 0;
   }
 
   .select-btn {
-    background: #4a90e2;
+    background: #007AFF;
     color: white;
     border: none;
-    padding: 0.4rem 0.75rem;
-    border-radius: 3px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s ease-out;
+    letter-spacing: -0.01em;
   }
 
   .select-btn:hover {
-    background: #357abd;
+    background: #0051D5;
+    transform: translateY(-0.5px);
+  }
+
+  .select-btn:active {
+    transform: translateY(0);
   }
 
   .skip-btn {
     background: transparent;
-    color: #999;
-    border: 1px solid #333;
-    padding: 0.4rem 0.75rem;
-    border-radius: 3px;
+    color: rgba(0, 0, 0, 0.7);
+    border: 0.5px solid rgba(0, 0, 0, 0.2);
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 12px;
+    transition: all 0.15s ease-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .skip-btn {
+      color: rgba(255, 255, 255, 0.7);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
   }
 
   .skip-btn:hover {
-    background: #252525;
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .skip-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
   }
 </style>

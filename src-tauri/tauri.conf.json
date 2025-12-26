@@ -10,16 +10,18 @@
   },
   "app": {
     "windows": [
-      {
-        "label": "main",
-        "title": "Folder Watcher",
-        "width": 800,
-        "height": 600,
-        "resizable": true,
-        "fullscreen": false,
-        "visible": true,
-        "skipTaskbar": false
-      },
+          {
+            "label": "main",
+            "title": "Folder Watcher",
+            "width": 800,
+            "height": 600,
+            "resizable": true,
+            "fullscreen": false,
+            "visible": true,
+            "skipTaskbar": false,
+            "transparent": true,
+            "decorations": true
+          },
       {
         "label": "file-organization",
         "title": "File Organization",
