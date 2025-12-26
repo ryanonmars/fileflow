@@ -183,6 +183,7 @@ pub fn process_file_from_notification(
 #[tauri::command]
 pub fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
         window.show().map_err(|e| format!("Failed to show window: {}", e))?;
         window.set_focus().map_err(|e| format!("Failed to focus window: {}", e))?;
     }
