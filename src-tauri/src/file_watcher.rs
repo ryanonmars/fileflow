@@ -24,17 +24,35 @@ impl FileWatcher {
         let watcher = notify::recommended_watcher(move |result: Result<Event, notify::Error>| {
             match result {
                 Ok(event) => {
-                    if let EventKind::Create(_) = event.kind {
+                    // Watch for Create and Modify events (downloads often create temp files then rename)
+                    // We'll process any Create event, and Modify events that might indicate file completion
+                    let should_process = match &event.kind {
+                        EventKind::Create(_) => true,
+                        EventKind::Modify(kind) => {
+                            // Process rename events (downloads often rename temp files)
+                            matches!(kind, notify::event::ModifyKind::Name(_))
+                        }
+                        _ => false,
+                    };
+                    if should_process {
                         for path in event.paths {
-                            if path.is_file() {
-                                let path_clone = path.clone();
-                                let config_clone2 = config_clone.clone();
-                                let pending_files_clone2 = pending_files_clone.clone();
-                                let event_tx_clone2 = event_tx_clone.clone();
-                                
-                                std::thread::spawn(move || {
-                                    std::thread::sleep(std::time::Duration::from_millis(100));
-                                    if path_clone.exists() {
+                            // Skip .download files and other temporary download files
+                            if let Some(ext) = path.extension() {
+                                if ext == "download" || ext == "crdownload" || ext == "part" {
+                                    continue;
+                                }
+                            }
+                            
+                            let path_clone = path.clone();
+                            let config_clone2 = config_clone.clone();
+                            let pending_files_clone2 = pending_files_clone.clone();
+                            let event_tx_clone2 = event_tx_clone.clone();
+                            
+                            std::thread::spawn(move || {
+                                // Wait a bit longer for downloads to complete
+                                std::thread::sleep(std::time::Duration::from_millis(500));
+                                // Check if it's a file after the delay
+                                if path_clone.exists() && path_clone.is_file() {
                                         let config = config_clone2.lock().unwrap();
                                         let mode = config.organization_mode.as_str();
                                         
@@ -62,7 +80,7 @@ impl FileWatcher {
                                                     file_name,
                                                     created_date,
                                                 ) {
-                                                    match organize_file_to_destination(&path_clone, &destination) {
+                                                    match organize_file_to_destination(&path_clone, &destination, None) {
                                                         Ok(dest) => {
                                                             let _ = event_tx_clone2.send(format!(
                                                                 "Moved: {} -> {}",
@@ -121,7 +139,7 @@ impl FileWatcher {
                                                     file_name,
                                                     created_date,
                                                 ) {
-                                                    match organize_file_to_destination(&path_clone, &destination) {
+                                                    match organize_file_to_destination(&path_clone, &destination, None) {
                                                         Ok(dest) => {
                                                             let _ = event_tx_clone2.send(format!(
                                                                 "Moved: {} -> {}",
@@ -163,7 +181,6 @@ impl FileWatcher {
                             }
                         }
                     }
-                }
                 Err(e) => {
                     let _ = event_tx_clone.send(format!("Watch error: {}", e));
                 }
@@ -263,7 +280,7 @@ impl FileWatcher {
         Ok(())
     }
 
-    pub fn process_pending_file(&self, file_path: &str, destination: Option<String>) -> Result<(), String> {
+    pub fn process_pending_file(&self, file_path: &str, destination: Option<String>, new_name: Option<String>) -> Result<(), String> {
         let path = std::path::PathBuf::from(file_path);
         
         if !path.exists() {
@@ -272,7 +289,7 @@ impl FileWatcher {
         }
 
         if let Some(dest) = destination {
-            match organize_file_to_destination(&path, &dest) {
+            match organize_file_to_destination(&path, &dest, new_name.as_deref()) {
                 Ok(_) => {
                     self.remove_pending_file(file_path)?;
                     let _ = self.event_tx.send(format!(

@@ -7,6 +7,7 @@
   let processingFile = null;
   let processingAll = false;
   let pollingInterval = null;
+  let renamedFiles = {}; // Map of file path to new name
 
   onMount(async () => {
     await loadPendingFiles();
@@ -74,10 +75,17 @@
 
       if (selected) {
         const destination = Array.isArray(selected) ? selected[0] : selected;
+        const newName = renamedFiles[filePath] && renamedFiles[filePath].trim() 
+          ? renamedFiles[filePath].trim() 
+          : null;
         await invoke('process_pending_file', {
           filePath: filePath,
           destination: destination,
+          newName: newName,
         });
+        // Clear the rename for this file
+        delete renamedFiles[filePath];
+        renamedFiles = renamedFiles;
         await loadPendingFiles();
       }
     } catch (err) {
@@ -96,7 +104,11 @@
       await invoke('process_pending_file', {
         filePath: filePath,
         destination: null,
+        newName: null,
       });
+      // Clear the rename for this file
+      delete renamedFiles[filePath];
+      renamedFiles = renamedFiles;
       await loadPendingFiles();
     } catch (err) {
       console.error('Failed to skip file:', err);
@@ -115,6 +127,7 @@
         await invoke('process_pending_file', {
           filePath: file.path,
           destination: null,
+          newName: null,
         });
       }
       await loadPendingFiles();
@@ -142,6 +155,7 @@
           await invoke('process_pending_file', {
             filePath: file.path,
             destination: destination,
+            newName: null,
           });
         }
         await loadPendingFiles();
@@ -177,7 +191,17 @@
       {#each pendingFiles as file (file.path + '-' + file.detected_at)}
         <div class="file-item">
           <div class="file-info">
-            <span class="file-name">{file.name}</span>
+            <input 
+              type="text" 
+              class="rename-input"
+              value={renamedFiles[file.path] || file.name}
+              on:input={(e) => {
+                renamedFiles[file.path] = e.target.value;
+                renamedFiles = renamedFiles;
+              }}
+              placeholder={file.name}
+              disabled={processingFile === file.path || processingAll}
+            />
             <span class="file-extension">{file.extension || 'no ext'}</span>
             <span class="file-size">{formatFileSize(file.size)}</span>
           </div>
@@ -338,20 +362,44 @@
     gap: 12px;
   }
 
-  .file-name {
-    font-weight: 500;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .rename-input {
+    flex: 1;
+    min-width: 0;
     max-width: 300px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.1);
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.15s ease-out;
   }
 
   @media (prefers-color-scheme: light) {
-    .file-name {
+    .rename-input {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.2);
       color: rgba(0, 0, 0, 0.9);
     }
+  }
+
+  .rename-input:focus {
+    outline: none;
+    border-color: #007AFF;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  }
+
+  @media (prefers-color-scheme: light) {
+    .rename-input:focus {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .rename-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   .file-extension {

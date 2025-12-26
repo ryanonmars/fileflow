@@ -98,7 +98,7 @@ impl Config {
         file_name: &str,
         created_date: Option<std::time::SystemTime>,
     ) -> Option<String> {
-        // First, try rules-based matching
+        // Only use rules-based matching - no fallbacks
         for rule in &self.rules {
             if rule.matches(file_path, file_extension, file_name, created_date) {
                 if !rule.destination.is_empty() {
@@ -106,21 +106,7 @@ impl Config {
                 }
             }
         }
-
-        // Fallback to old mappings for backward compatibility
-        let ext = file_extension.to_lowercase();
-        if let Some(folder) = self.mappings.get(&ext) {
-            if !folder.is_empty() {
-                return Some(folder.clone());
-            }
-        }
-        self.mappings.get("other").and_then(|f| {
-            if !f.is_empty() {
-                Some(f.clone())
-            } else {
-                None
-            }
-        })
+        None
     }
 }
 

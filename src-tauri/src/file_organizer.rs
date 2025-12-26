@@ -62,26 +62,43 @@ pub fn organize_file(file_path: &Path, config: &Config) -> Result<String, String
     Ok(dest_file.to_string_lossy().to_string())
 }
 
-pub fn organize_file_to_destination(file_path: &Path, destination: &str) -> Result<String, String> {
+pub fn organize_file_to_destination(file_path: &Path, destination: &str, new_name: Option<&str>) -> Result<String, String> {
     let dest_path = PathBuf::from(destination);
     if !dest_path.exists() {
         fs::create_dir_all(&dest_path)
             .map_err(|e| format!("Failed to create destination folder: {}", e))?;
     }
 
-    let file_name_obj = file_path
-        .file_name()
-        .ok_or_else(|| "Invalid file name".to_string())?;
+    let file_name_obj = if let Some(name) = new_name {
+        // Use the provided new name, but preserve extension if not included
+        let original_ext = file_path
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("");
+        
+        if !original_ext.is_empty() && !name.contains('.') {
+            // Add extension if not present in new name
+            format!("{}.{}", name, original_ext)
+        } else {
+            name.to_string()
+        }
+    } else {
+        file_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map(|s| s.to_string())
+            .ok_or_else(|| "Invalid file name".to_string())?
+    };
 
-    let mut dest_file = dest_path.join(file_name_obj);
+    let mut dest_file = dest_path.join(&file_name_obj);
     let mut counter = 1;
 
     while dest_file.exists() {
-        let stem = file_path
+        let stem = dest_file
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("file");
-        let ext = file_path
+        let ext = dest_file
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("");

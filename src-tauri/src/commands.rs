@@ -102,10 +102,10 @@ pub fn get_pending_files() -> Result<Vec<PendingFile>, String> {
 }
 
 #[tauri::command]
-pub fn process_pending_file(app: tauri::AppHandle, filePath: String, destination: Option<String>) -> Result<(), String> {
+pub fn process_pending_file(app: tauri::AppHandle, filePath: String, destination: Option<String>, newName: Option<String>) -> Result<(), String> {
     if let Some(watcher_arc) = WATCHER.lock().unwrap().as_ref() {
         let watcher = watcher_arc.lock().unwrap();
-        watcher.process_pending_file(&filePath, destination)?;
+        watcher.process_pending_file(&filePath, destination, newName)?;
         
         // Refresh the file list in the modal instead of closing it
         if let Some(window) = app.get_webview_window("file-organization") {
@@ -135,7 +135,7 @@ pub fn move_file_manual(file_path: String, destination: String) -> Result<String
         return Err("File does not exist".to_string());
     }
 
-    organize_file_to_destination(&path, &destination)
+        organize_file_to_destination(&path, &destination, None)
 }
 
 #[tauri::command]
@@ -172,7 +172,7 @@ pub fn process_file_from_notification(
     if action == "skip" {
         if let Some(watcher_arc) = WATCHER.lock().unwrap().as_ref() {
             let watcher = watcher_arc.lock().unwrap();
-            watcher.process_pending_file(&file_path, None)?;
+            watcher.process_pending_file(&file_path, None, None)?;
         }
         Ok(())
     } else {
