@@ -87,6 +87,20 @@
     }
   }
 
+  let modeDescription = '';
+
+  $: {
+    if (organizationMode === 'auto') {
+      modeDescription = 'Files are automatically moved to their destination folders based on your rules. No prompts or notifications.';
+    } else if (organizationMode === 'ask') {
+      modeDescription = 'Every file triggers a prompt asking where to move it. You can select a destination folder or skip the file.';
+    } else if (organizationMode === 'both') {
+      modeDescription = 'Files matching your rules are automatically moved. Files that don\'t match any rule trigger a prompt asking where to move them.';
+    } else {
+      modeDescription = '';
+    }
+  }
+
   async function selectFolder() {
     try {
       const { open } = await import('@tauri-apps/plugin-dialog');
@@ -168,7 +182,11 @@
         operator: getOperator(rule.condition),
         destination: rule.destination
       }));
+      // Default all rules to collapsed
       collapsedRules = {};
+      rules.forEach(rule => {
+        collapsedRules[rule.id] = true;
+      });
     } catch (err) {
       handleError(`Failed to load rules: ${err}`);
     }
@@ -189,7 +207,7 @@
       operator: 'before',
       destination: ''
     }];
-    collapsedRules[newId] = false;
+    collapsedRules[newId] = true;
     collapsedRules = collapsedRules;
     saveRules();
   }
@@ -315,6 +333,14 @@
   <FileOrganizationModal />
 {:else}
   <div class="app-container">
+    {#if error}
+      <div class="message error">{error}</div>
+    {/if}
+    
+    {#if success}
+      <div class="message success">{success}</div>
+    {/if}
+
     <div class="tabs">
       <button 
         class="tab" 
@@ -340,13 +366,6 @@
     </div>
 
     <div class="content">
-      {#if error}
-        <div class="message error">{error}</div>
-      {/if}
-      
-      {#if success}
-        <div class="message success">{success}</div>
-      {/if}
 
       {#if activeTab === 'general'}
         <div class="tab-content">
@@ -358,15 +377,6 @@
               <input id="watched-folder" type="text" bind:value={watchedFolder} placeholder="No folder selected" readonly />
               <button on:click={selectFolder}>Select Folder</button>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="org-mode">Organization Mode:</label>
-            <select id="org-mode" bind:value={organizationMode} on:change={changeOrganizationMode}>
-              <option value="auto">Auto</option>
-              <option value="ask">Ask</option>
-              <option value="both">Both</option>
-            </select>
           </div>
 
           <div class="form-group">
@@ -387,7 +397,20 @@
         </div>
       {:else if activeTab === 'rules'}
         <div class="tab-content">
-          <h2>Organization Rules</h2>
+          <div class="rules-header">
+            <h2>Organization Rules</h2>
+            <button class="add-rule-btn" on:click={addRule}>+ Add Rule</button>
+          </div>
+          
+          <div class="form-group org-mode-group">
+            <label for="org-mode">Organization Mode:</label>
+            <select id="org-mode" bind:value={organizationMode} on:change={changeOrganizationMode}>
+              <option value="auto">Auto</option>
+              <option value="ask">Ask</option>
+              <option value="both">Both</option>
+            </select>
+            <span class="mode-description">{modeDescription}</span>
+          </div>
           
           <div class="rules-list">
             {#each rules as rule, index (rule.id)}
@@ -483,8 +506,6 @@
               </div>
             {/each}
           </div>
-
-          <button class="add-rule-btn" on:click={addRule}>+ Add Rule</button>
         </div>
       {:else if activeTab === 'pending'}
         <div class="tab-content">
@@ -625,21 +646,29 @@
   }
 
   .message {
-    padding: 10px 12px;
-    margin-bottom: 12px;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 16px;
     font-size: 13px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    pointer-events: none;
   }
 
   .error {
-    color: #FF453A;
-    background: rgba(255, 69, 58, 0.15);
+    color: white;
+    background: rgba(255, 69, 58, 0.95);
+    border: 0.5px solid rgba(255, 69, 58, 0.3);
   }
 
   .success {
-    color: #30D158;
-    background: rgba(48, 209, 88, 0.15);
+    color: white;
+    background: rgba(48, 209, 88, 0.95);
+    border: 0.5px solid rgba(48, 209, 88, 0.3);
   }
 
   .form-group {
@@ -701,6 +730,33 @@
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
   }
 
+  .org-mode-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .org-mode-group label {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .org-mode-group select {
+    flex-shrink: 0;
+  }
+
+  .mode-description {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: -0.01em;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .mode-description {
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
   .form-group button {
     padding: 6px 16px;
     font-size: 13px;
@@ -760,13 +816,13 @@
   .rules-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 5px;
     margin-bottom: 16px;
   }
 
   .rule-item {
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
-    padding-bottom: 16px;
+    padding-bottom: 5px;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -779,7 +835,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    gap: 12px;
+    margin-bottom: 0;
     cursor: pointer;
   }
 
@@ -854,6 +911,7 @@
     flex-direction: column;
     gap: 12px;
     margin-left: 20px;
+    margin-top: 12px;
   }
 
   .condition-group {
@@ -921,8 +979,19 @@
     flex: 1;
   }
 
+  .rules-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .rules-header h2 {
+    margin: 0;
+  }
+
   .add-rule-btn {
-    padding: 8px 16px;
+    padding: 6px 12px;
     background: #007AFF;
     color: white;
     border: none;
