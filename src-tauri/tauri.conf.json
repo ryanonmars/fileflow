@@ -1,7 +1,7 @@
 {
-  "productName": "Folder Watcher",
+  "productName": "FileFlow",
   "version": "0.1.0",
-  "identifier": "com.folderwatcher.app",
+  "identifier": "com.fileflow.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -12,7 +12,7 @@
     "windows": [
           {
             "label": "main",
-            "title": "Folder Watcher",
+            "title": "FileFlow",
             "width": 600,
             "height": 400,
             "resizable": true,
