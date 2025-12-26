@@ -71,8 +71,21 @@
     try {
       config = await invoke('get_config');
       watchedFolder = config.watched_folder || '';
-      isWatching = watchedFolder !== '';
       organizationMode = await invoke('get_organization_mode');
+      
+      // Automatically start watching if a folder is configured
+      if (watchedFolder) {
+        try {
+          await invoke('start_watching', { watchedFolder });
+          isWatching = true;
+        } catch (err) {
+          // If watching fails, don't set isWatching to true
+          console.error('Failed to auto-start watching:', err);
+          isWatching = false;
+        }
+      } else {
+        isWatching = false;
+      }
     } catch (err) {
       handleError(`Failed to load config: ${err}`);
     }
@@ -114,9 +127,7 @@
         if (config) {
           config.watched_folder = watchedFolder;
           await invoke('save_config', { config });
-          if (isWatching) {
-            await startWatching();
-          }
+          await startWatching();
         }
       }
     } catch (err) {
@@ -138,13 +149,18 @@
     }
   }
 
-  async function stopWatching() {
+  async function clearFolder() {
     try {
       await invoke('stop_watching');
+      watchedFolder = '';
       isWatching = false;
-      handleSuccess('Stopped watching folder');
+      if (config) {
+        config.watched_folder = '';
+        await invoke('save_config', { config });
+      }
+      handleSuccess('Cleared watched folder');
     } catch (err) {
-      handleError(`Failed to stop watching: ${err}`);
+      handleError(`Failed to clear folder: ${err}`);
     }
   }
 
@@ -380,11 +396,8 @@
           </div>
 
           <div class="form-group">
-            <button on:click={startWatching} disabled={isWatching || !watchedFolder}>
-              Start Watching
-            </button>
-            <button on:click={stopWatching} disabled={!isWatching}>
-              Stop Watching
+            <button on:click={clearFolder} disabled={!watchedFolder}>
+              Clear Folder
             </button>
           </div>
 
