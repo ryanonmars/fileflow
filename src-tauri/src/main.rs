@@ -52,20 +52,6 @@ fn main() {
                         _ => {}
                     }
                 })
-                .on_tray_icon_event(move |tray, event| {
-                    use tauri::tray::{TrayIconEvent, MouseButton};
-                    if let TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
-                        if let Some(window) = tray.app_handle().get_webview_window("main") {
-                            if window.is_visible().unwrap_or(false) {
-                                let _ = window.hide();
-                            } else {
-                                let _ = window.unminimize();
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
-                    }
-                })
                 .build(app)?;
 
             let window = app.get_webview_window("main").unwrap();

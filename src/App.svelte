@@ -430,7 +430,6 @@
           {/if}
 
           <div class="settings-section">
-            <h3>App Settings</h3>
             <div class="setting-item">
               <label for="launch-at-login">Launch at login</label>
               <label class="toggle-switch">
@@ -1234,20 +1233,6 @@
     .settings-section {
       background: rgba(0, 0, 0, 0.05);
       border-color: rgba(0, 0, 0, 0.1);
-    }
-  }
-
-  .settings-section h3 {
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0 0 8px 0;
-    padding: 0 16px;
-    color: rgba(255, 255, 255, 0.85);
-  }
-
-  @media (prefers-color-scheme: light) {
-    .settings-section h3 {
-      color: rgba(0, 0, 0, 0.85);
     }
   }
 
