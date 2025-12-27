@@ -24,14 +24,120 @@ pub fn get_config() -> Result<Config, String> {
 }
 
 #[tauri::command]
-pub fn save_config(config: Config) -> Result<(), String> {
+pub fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), String> {
     config.save()?;
 
     if let Some(watcher_arc) = WATCHER.lock().unwrap().as_ref() {
         let watcher = watcher_arc.lock().unwrap();
-        watcher.update_config(config)?;
+        watcher.update_config(config.clone())?;
     }
 
+    // Apply settings immediately
+    apply_settings(&app, &config)?;
+
+    Ok(())
+}
+
+fn apply_settings(_app: &tauri::AppHandle, config: &Config) -> Result<(), String> {
+    // Handle launch at login
+    #[cfg(target_os = "macos")]
+    {
+        set_launch_at_login(config.launch_at_login)?;
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn set_launch_at_login(enabled: bool) -> Result<(), String> {
+    use std::process::Command;
+    
+    // Get the app bundle path dynamically
+    let app_path = std::env::current_exe()
+        .map_err(|e| format!("Failed to get current executable: {}", e))?;
+    
+    // Navigate up to the .app bundle
+    let app_bundle = app_path
+        .ancestors()
+        .find(|p| p.extension().and_then(|s| s.to_str()) == Some("app"));
+    
+    // If we can't find .app bundle, we're in dev mode - skip silently
+    let app_bundle = match app_bundle {
+        Some(bundle) => bundle,
+        None => {
+            // In dev mode, just save the preference without error
+            return Ok(());
+        }
+    };
+    
+    let app_path_str = app_bundle.to_string_lossy();
+    let app_name = app_bundle
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("FileFlow");
+    
+    if enabled {
+        // First, try to remove any existing entry to avoid duplicates
+        let remove_script = format!(
+            "tell application \"System Events\"\n\
+             try\n\
+                 delete (every login item whose name is \"{}\")\n\
+             end try\n\
+             end tell",
+            app_name
+        );
+        let _ = Command::new("osascript")
+            .arg("-e")
+            .arg(&remove_script)
+            .output();
+        
+        // Add to login items using osascript
+        let add_script = format!(
+            "tell application \"System Events\" to make login item at end with properties {{path:\"{}\", hidden:false}}",
+            app_path_str
+        );
+        let output = Command::new("osascript")
+            .arg("-e")
+            .arg(&add_script)
+            .output()
+            .map_err(|e| format!("Failed to enable launch at login: {}", e))?;
+        
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Failed to enable launch at login: {}", error));
+        }
+    } else {
+        // Remove from login items by name
+        let script = format!(
+            "tell application \"System Events\"\n\
+             try\n\
+                 delete (every login item whose name is \"{}\")\n\
+             end try\n\
+             end tell",
+            app_name
+        );
+        let output = Command::new("osascript")
+            .arg("-e")
+            .arg(&script)
+            .output()
+            .map_err(|e| format!("Failed to disable launch at login: {}", e))?;
+        
+        // Don't error if it wasn't in login items - this is expected
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr);
+            // Only error if it's not a "not found" type error
+            if !error.contains("Can't get") && !error.contains("doesn't understand") && !error.is_empty() {
+                return Err(format!("Failed to disable launch at login: {}", error));
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn set_launch_at_login(_enabled: bool) -> Result<(), String> {
+    // Not implemented for other platforms yet
     Ok(())
 }
 

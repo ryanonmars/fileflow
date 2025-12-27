@@ -44,6 +44,14 @@ pub struct Config {
     // Keep mappings for backward compatibility during migration
     #[serde(default)]
     pub mappings: std::collections::HashMap<String, String>,
+    #[serde(default = "default_show_menu_bar_icon")]
+    pub show_menu_bar_icon: bool,
+    #[serde(default)]
+    pub launch_at_login: bool,
+}
+
+fn default_show_menu_bar_icon() -> bool {
+    true
 }
 
 fn default_organization_mode() -> String {
@@ -57,6 +65,8 @@ impl Default for Config {
             organization_mode: "auto".to_string(),
             rules: Vec::new(),
             mappings: std::collections::HashMap::new(),
+            show_menu_bar_icon: true,
+            launch_at_login: false,
         }
     }
 }

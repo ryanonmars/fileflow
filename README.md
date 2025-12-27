@@ -51,3 +51,5 @@ The configuration includes:
 - `watched_folder`: Path to the folder being monitored
 - `mappings`: Object mapping file extensions to destination folders
 
+
+

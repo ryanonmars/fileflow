@@ -14,6 +14,7 @@
   let isWatching = false;
   let config = null;
   let organizationMode = 'auto';
+  let launchAtLogin = false;
 
   // Rules tab state
   const conditionTypes = [
@@ -72,6 +73,7 @@
       config = await invoke('get_config');
       watchedFolder = config.watched_folder || '';
       organizationMode = await invoke('get_organization_mode');
+      launchAtLogin = config.launch_at_login === true;
       
       // Automatically start watching if a folder is configured
       if (watchedFolder) {
@@ -79,7 +81,6 @@
           await invoke('start_watching', { watchedFolder });
           isWatching = true;
         } catch (err) {
-          // If watching fails, don't set isWatching to true
           console.error('Failed to auto-start watching:', err);
           isWatching = false;
         }
@@ -88,6 +89,18 @@
       }
     } catch (err) {
       handleError(`Failed to load config: ${err}`);
+    }
+  }
+
+  async function saveGeneralSettings() {
+    try {
+      if (config) {
+        config.launch_at_login = launchAtLogin;
+        await invoke('save_config', { config });
+        handleSuccess('Settings saved');
+      }
+    } catch (err) {
+      handleError(`Failed to save settings: ${err}`);
     }
   }
 
@@ -415,6 +428,17 @@
               <span>Watching: {watchedFolder}</span>
             </div>
           {/if}
+
+          <div class="settings-section">
+            <h3>App Settings</h3>
+            <div class="setting-item">
+              <label for="launch-at-login">Launch at login</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="launch-at-login" bind:checked={launchAtLogin} on:change={saveGeneralSettings} />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
       {:else if activeTab === 'rules'}
         <div class="tab-content">
@@ -1196,5 +1220,111 @@
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.3);
     }
+  }
+
+  .settings-section {
+    margin-top: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px 0;
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+
+  @media (prefers-color-scheme: light) {
+    .settings-section {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .settings-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    padding: 0 16px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  @media (prefers-color-scheme: light) {
+    .settings-section h3 {
+      color: rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+  }
+
+  .setting-item label:first-child {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
+    margin: 0;
+    flex: 1;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .setting-item label:first-child {
+      color: rgba(0, 0, 0, 0.9);
+    }
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 26px;
+    cursor: pointer;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: 0.2s;
+    border-radius: 13px;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .toggle-slider {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background-color: #007AFF;
+  }
+
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(18px);
+  }
+
+  .toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
   }
 </style>
