@@ -21,8 +21,20 @@ fn main() {
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
-            let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+            let tray_icon = {
+                let icon_bytes = include_bytes!("../icons/icon-menu.png");
+                let img = image::load_from_memory(icon_bytes)
+                    .ok()
+                    .and_then(|img| {
+                        let rgba = img.to_rgba8();
+                        let (width, height) = rgba.dimensions();
+                        Some(tauri::image::Image::new_owned(rgba.into_raw(), width, height))
+                    });
+                img.or_else(|| app.default_window_icon().cloned())
+            };
+
+            let _tray = TrayIconBuilder::with_id("main-tray")
+                .icon(tray_icon.unwrap().clone())
                 .menu(&menu)
                 .tooltip("FileFlow")
                 .on_menu_event(move |app, event| {
