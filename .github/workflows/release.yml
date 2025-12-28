@@ -51,7 +51,10 @@ jobs:
       - name: Check build output for errors
         run: |
           echo "=== Checking build log for signing/updater errors ==="
-          grep -i "sign\|updater\|latest.json" build.log || echo "No signing/updater messages found"
+          grep -i "sign\|updater\|latest.json\|error\|fail" build.log | tail -50 || echo "No signing/updater messages found"
+          echo ""
+          echo "=== Checking if latest.json exists anywhere ==="
+          find src-tauri/target -name "latest.json" 2>/dev/null || echo "latest.json not found anywhere in target directory"
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
@@ -94,6 +97,17 @@ jobs:
           echo "  latest.json: ${LATEST_JSON:-NOT FOUND}"
           echo "  tar.gz: ${TAR_GZ:-NOT FOUND}"
           echo "  sig: ${SIG:-NOT FOUND}"
+          
+          # If latest.json is missing but tar.gz and sig exist, try to generate it manually
+          if [ -z "$LATEST_JSON" ] && [ -n "$TAR_GZ" ] && [ -n "$SIG" ]; then
+            echo "WARNING: latest.json missing but tar.gz and sig exist"
+            echo "Checking if we can find version info to generate latest.json..."
+            VERSION=$(grep -m1 "^version" src-tauri/Cargo.toml | cut -d'"' -f2)
+            APP_NAME=$(grep -m1 "^name" src-tauri/Cargo.toml | cut -d'"' -f2)
+            echo "Version: $VERSION, App: $APP_NAME"
+            echo "This suggests Tauri's updater artifact generation may have failed."
+            echo "Check the build log above for signing errors."
+          fi
           
           if [ -n "$LATEST_JSON" ]; then
             echo "Found latest.json: $LATEST_JSON"
