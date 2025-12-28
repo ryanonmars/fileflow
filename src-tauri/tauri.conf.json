@@ -58,7 +58,9 @@
             "notification:allow-is-permission-granted",
             "notification:allow-request-permission",
             "notification:allow-show",
-            "notification:default"
+            "notification:default",
+            "updater:allow-check",
+            "updater:allow-install"
           ]
         },
         {
@@ -88,6 +90,14 @@
     "icon": [
       "icons/icon.icns"
     ],
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": "YOUR_UPDATER_PUBLIC_KEY_HERE"
+    },
     "macOS": {
       "dmg": {
         "background": "icons/dmg-background.png",
