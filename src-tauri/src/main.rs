@@ -85,7 +85,7 @@ fn main() {
                                                     .show(|_| {});
                                             }
                                             Err(e) => {
-                                                let message = format!("{}\nVersion {}\n\nUnable to check for updates.", product_name, version);
+                                                let message = format!("{}\nVersion {}\n\nUnable to check for updates.\nError: {}", product_name, version, e);
                                                 dialog.message(&message)
                                                     .kind(MessageDialogKind::Info)
                                                     .title("About")
@@ -93,8 +93,8 @@ fn main() {
                                             }
                                         }
                                     }
-                                    Err(_) => {
-                                        let message = format!("{}\nVersion {}", product_name, version);
+                                    Err(e) => {
+                                        let message = format!("{}\nVersion {}\n\nUnable to initialize updater.\nError: {}", product_name, version, e);
                                         dialog.message(&message)
                                             .kind(MessageDialogKind::Info)
                                             .title("About")
