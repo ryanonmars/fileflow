@@ -30,15 +30,17 @@ jobs:
 
       - name: Setup signing key
         run: |
-          mkdir -p ~/.tauri
+          mkdir -p $HOME/.tauri
+          KEY_FILE="$HOME/.tauri/fileflow.key"
           # Decode base64 key from secret and write to file
-          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > ~/.tauri/fileflow.key
-          chmod 600 ~/.tauri/fileflow.key
+          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          echo "KEY_FILE=$KEY_FILE" >> $GITHUB_ENV
 
       - name: Build Tauri app
         run: npm run tauri:build
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ~/.tauri/fileflow.key
+          TAURI_SIGNING_PRIVATE_KEY: ${{ env.KEY_FILE }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload DMG artifact
