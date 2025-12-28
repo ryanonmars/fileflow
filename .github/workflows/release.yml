@@ -64,14 +64,22 @@ jobs:
             src-tauri/target/release/bundle/**/latest.json
           if-no-files-found: ignore
 
+      - name: Verify latest.json exists
+        run: |
+          echo "=== Checking for latest.json ==="
+          find src-tauri/target/release/bundle -name "latest.json" -exec cat {} \;
+          echo ""
+          echo "=== latest.json location ==="
+          find src-tauri/target/release/bundle -name "latest.json"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             src-tauri/target/release/bundle/dmg/FileFlow.dmg
-            src-tauri/target/release/bundle/**/*.tar.gz
-            src-tauri/target/release/bundle/**/*.sig
-            src-tauri/target/release/bundle/**/latest.json
+            src-tauri/target/release/bundle/macos/*.tar.gz
+            src-tauri/target/release/bundle/macos/*.sig
+            src-tauri/target/release/bundle/macos/latest.json
           draft: false
           prerelease: false
           generate_release_notes: true
