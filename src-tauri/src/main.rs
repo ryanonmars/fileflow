@@ -53,15 +53,55 @@ fn main() {
                         }
                         "about" => {
                             use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                            use tauri_plugin_updater::UpdaterExt;
+                            
                             let version = app.package_info().version.to_string();
                             let product_name = app.package_info().name.clone();
-                            let message = format!("{}\nVersion {}", product_name, version);
+                            let app_handle = app.handle().clone();
                             
-                            let dialog = app.dialog();
-                            dialog.message(&message)
-                                .kind(MessageDialogKind::Info)
-                                .title("About")
-                                .show(|_| {});
+                            // Check for updates asynchronously
+                            tauri::async_runtime::spawn(async move {
+                                let dialog = app_handle.dialog();
+                                let updater_builder = app_handle.updater_builder();
+                                
+                                match updater_builder.build() {
+                                    Ok(updater) => {
+                                        match updater.check().await {
+                                            Ok(Some(update)) => {
+                                                let message = format!(
+                                                    "{}\nVersion {}\n\nUpdate available: {}",
+                                                    product_name, version, update.version
+                                                );
+                                                dialog.message(&message)
+                                                    .kind(MessageDialogKind::Info)
+                                                    .title("About - Update Available")
+                                                    .show(|_| {});
+                                            }
+                                            Ok(None) => {
+                                                let message = format!("{}\nVersion {}\n\nYou are running the latest version.", product_name, version);
+                                                dialog.message(&message)
+                                                    .kind(MessageDialogKind::Info)
+                                                    .title("About")
+                                                    .show(|_| {});
+                                            }
+                                            Err(e) => {
+                                                let message = format!("{}\nVersion {}\n\nUnable to check for updates.", product_name, version);
+                                                dialog.message(&message)
+                                                    .kind(MessageDialogKind::Info)
+                                                    .title("About")
+                                                    .show(|_| {});
+                                            }
+                                        }
+                                    }
+                                    Err(_) => {
+                                        let message = format!("{}\nVersion {}", product_name, version);
+                                        dialog.message(&message)
+                                            .kind(MessageDialogKind::Info)
+                                            .title("About")
+                                            .show(|_| {});
+                                    }
+                                }
+                            });
                         }
                         _ => {}
                     }
