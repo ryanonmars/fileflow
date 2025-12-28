@@ -96,7 +96,7 @@
         "https://github.com/ryanonmars/fileflow/releases/latest/download/latest.json"
       ],
       "dialog": true,
-      "pubkey": "YOUR_UPDATER_PUBLIC_KEY_HERE"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQwM0ZDQ0ZGQ0VGNTEyNjUKUldSbEV2WE8vOHcvMEluZVdOV2t3Q3U3Sy8ybG1aS3VRMVZnRTVydm52K0lmTUdvcVFaZVVmRTkK"
     },
     "macOS": {
       "dmg": {

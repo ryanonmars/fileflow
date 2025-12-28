@@ -22,3 +22,4 @@ tauri signer generate -w ~/.tauri/myapp.key --print-public-key
 echo ""
 echo "========================================="
 
+
