@@ -64,22 +64,41 @@ jobs:
             src-tauri/target/release/bundle/**/latest.json
           if-no-files-found: ignore
 
-      - name: Verify latest.json exists
+      - name: Find and prepare update artifacts
+        id: find-artifacts
         run: |
-          echo "=== Checking for latest.json ==="
-          find src-tauri/target/release/bundle -name "latest.json" -exec cat {} \;
-          echo ""
-          echo "=== latest.json location ==="
-          find src-tauri/target/release/bundle -name "latest.json"
+          echo "=== Finding update artifacts ==="
+          LATEST_JSON=$(find src-tauri/target/release/bundle -name "latest.json" | head -1)
+          TAR_GZ=$(find src-tauri/target/release/bundle -name "*.tar.gz" | head -1)
+          SIG=$(find src-tauri/target/release/bundle -name "*.sig" | head -1)
+          
+          if [ -n "$LATEST_JSON" ]; then
+            echo "Found latest.json: $LATEST_JSON"
+            echo "latest_json=$LATEST_JSON" >> $GITHUB_OUTPUT
+            cat "$LATEST_JSON"
+          else
+            echo "ERROR: latest.json not found!"
+            exit 1
+          fi
+          
+          if [ -n "$TAR_GZ" ]; then
+            echo "Found tar.gz: $TAR_GZ"
+            echo "tar_gz=$TAR_GZ" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ -n "$SIG" ]; then
+            echo "Found sig: $SIG"
+            echo "sig=$SIG" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             src-tauri/target/release/bundle/dmg/FileFlow.dmg
-            src-tauri/target/release/bundle/macos/*.tar.gz
-            src-tauri/target/release/bundle/macos/*.sig
-            src-tauri/target/release/bundle/macos/latest.json
+            ${{ steps.find-artifacts.outputs.tar_gz }}
+            ${{ steps.find-artifacts.outputs.sig }}
+            ${{ steps.find-artifacts.outputs.latest_json }}
           draft: false
           prerelease: false
           generate_release_notes: true
