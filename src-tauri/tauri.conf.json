@@ -1,7 +1,7 @@
 {
   "productName": "FileFlow",
   "version": "0.1.0",
-  "identifier": "com.fileflow.app",
+  "identifier": "com.fileflow.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -84,10 +84,27 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["app", "dmg"],
     "icon": [
       "icons/icon.icns"
-    ]
+    ],
+    "macOS": {
+      "dmg": {
+        "background": "icons/dmg-background.png",
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 220
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 220
+        }
+      }
+    }
   }
 }
 

@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:build": "tauri build && npm run rename-dmg",
+    "rename-dmg": "node -e \"const fs = require('fs'); const path = require('path'); const dmgDir = 'src-tauri/target/release/bundle/dmg'; if (fs.existsSync(dmgDir)) { const files = fs.readdirSync(dmgDir); const dmgFile = files.find(f => f.startsWith('FileFlow_') && f.endsWith('.dmg')); if (dmgFile) { fs.renameSync(path.join(dmgDir, dmgFile), path.join(dmgDir, 'FileFlow.dmg')); console.log('Renamed', dmgFile, 'to FileFlow.dmg'); } }\""
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

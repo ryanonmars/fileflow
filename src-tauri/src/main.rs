@@ -18,11 +18,12 @@ fn main() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             let show_item = MenuItem::with_id(app, "show", "Show Settings", true, None::<&str>)?;
+            let about_item = MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+            let menu = Menu::with_items(app, &[&show_item, &about_item, &quit_item])?;
 
             let tray_icon = {
-                let icon_bytes = include_bytes!("../icons/icon-menu.png");
+                let icon_bytes = include_bytes!("../icons/app-icon.png");
                 let img = image::load_from_memory(icon_bytes)
                     .ok()
                     .and_then(|img| {
@@ -48,6 +49,18 @@ fn main() {
                                 let _ = window.show();
                                 let _ = window.set_focus();
                             }
+                        }
+                        "about" => {
+                            use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                            let version = app.package_info().version.to_string();
+                            let product_name = app.package_info().name.clone();
+                            let message = format!("{}\nVersion {}", product_name, version);
+                            
+                            let dialog = app.dialog();
+                            dialog.message(&message)
+                                .kind(MessageDialogKind::Info)
+                                .title("About")
+                                .show(|_| {});
                         }
                         _ => {}
                     }
