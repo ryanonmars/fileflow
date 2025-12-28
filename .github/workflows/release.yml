@@ -118,21 +118,10 @@ jobs:
             # Read signature
             SIGNATURE=$(cat "$SIG" | base64 -w 0 2>/dev/null || cat "$SIG" | base64)
             
-            # Create latest.json
+            # Create latest.json using printf to avoid YAML heredoc issues
             LATEST_JSON="$TAR_GZ_DIR/latest.json"
-            cat > "$LATEST_JSON" <<EOF
-{
-  "version": "$VERSION",
-  "notes": "Release $VERSION",
-  "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "platforms": {
-    "darwin-aarch64": {
-      "signature": "$SIGNATURE",
-      "url": "$DOWNLOAD_URL"
-    }
-  }
-}
-EOF
+            PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            printf '{\n  "version": "%s",\n  "notes": "Release %s",\n  "pub_date": "%s",\n  "platforms": {\n    "darwin-aarch64": {\n      "signature": "%s",\n      "url": "%s"\n    }\n  }\n}' "$VERSION" "$VERSION" "$PUB_DATE" "$SIGNATURE" "$DOWNLOAD_URL" > "$LATEST_JSON"
             echo "Generated latest.json at: $LATEST_JSON"
             echo "=== Generated latest.json contents ==="
             cat "$LATEST_JSON"
