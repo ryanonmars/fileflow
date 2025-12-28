@@ -40,14 +40,17 @@ jobs:
           name: FileFlow.dmg
           path: src-tauri/target/release/bundle/dmg/FileFlow.dmg
 
+      - name: List bundle directory
+        run: find src-tauri/target/release/bundle -type f -name "*.tar.gz" -o -name "*.sig" -o -name "latest.json" | head -20
+
       - name: Upload update artifacts
         uses: actions/upload-artifact@v4
         with:
           name: update-artifacts
           path: |
-            src-tauri/target/release/bundle/**/*.tar.gz
-            src-tauri/target/release/bundle/**/*.sig
-            src-tauri/target/release/bundle/**/latest.json
+            src-tauri/target/release/bundle/macos/*.tar.gz
+            src-tauri/target/release/bundle/macos/*.sig
+            src-tauri/target/release/bundle/macos/latest.json
           if-no-files-found: ignore
 
       - name: Create GitHub Release
@@ -55,6 +58,9 @@ jobs:
         with:
           files: |
             src-tauri/target/release/bundle/dmg/FileFlow.dmg
+            src-tauri/target/release/bundle/macos/*.tar.gz
+            src-tauri/target/release/bundle/macos/*.sig
+            src-tauri/target/release/bundle/macos/latest.json
           draft: false
           prerelease: false
           generate_release_notes: true
