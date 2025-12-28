@@ -35,9 +35,9 @@ jobs:
             echo "ERROR: TAURI_SIGNING_PRIVATE_KEY secret is not set!"
             exit 1
           fi
-          echo "Signing key is set (length: ${#TAURI_SIGNING_PRIVATE_KEY})"
+          echo "✓ TAURI_SIGNING_PRIVATE_KEY secret exists in GitHub"
           if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" ]; then
-            echo "Signing key password is set"
+            echo "✓ TAURI_SIGNING_PRIVATE_KEY_PASSWORD secret exists in GitHub"
           else
             echo "WARNING: TAURI_SIGNING_PRIVATE_KEY_PASSWORD is not set (key may be unencrypted)"
 
