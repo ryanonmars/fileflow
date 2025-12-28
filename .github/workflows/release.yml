@@ -31,7 +31,8 @@ jobs:
       - name: Setup signing key
         run: |
           mkdir -p ~/.tauri
-          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > ~/.tauri/fileflow.key
+          # Write the raw key content to file (GitHub Secret contains the actual key content, not base64)
+          printf '%s\n' "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > ~/.tauri/fileflow.key
           chmod 600 ~/.tauri/fileflow.key
 
       - name: Build Tauri app
