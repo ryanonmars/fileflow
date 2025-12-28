@@ -51,7 +51,10 @@ jobs:
       - name: Check build output for errors
         run: |
           echo "=== Checking build log for signing/updater errors ==="
-          grep -i "sign\|updater\|latest.json\|error\|fail" build.log | tail -50 || echo "No signing/updater messages found"
+          grep -i "sign\|updater\|latest.json\|error\|fail\|warning" build.log | tail -100 || echo "No signing/updater messages found"
+          echo ""
+          echo "=== Full build log (last 200 lines) ==="
+          tail -200 build.log
           echo ""
           echo "=== Checking if latest.json exists anywhere ==="
           find src-tauri/target -name "latest.json" 2>/dev/null || echo "latest.json not found anywhere in target directory"
@@ -101,12 +104,38 @@ jobs:
           # If latest.json is missing but tar.gz and sig exist, try to generate it manually
           if [ -z "$LATEST_JSON" ] && [ -n "$TAR_GZ" ] && [ -n "$SIG" ]; then
             echo "WARNING: latest.json missing but tar.gz and sig exist"
-            echo "Checking if we can find version info to generate latest.json..."
+            echo "Attempting to generate latest.json manually..."
             VERSION=$(grep -m1 "^version" src-tauri/Cargo.toml | cut -d'"' -f2)
             APP_NAME=$(grep -m1 "^name" src-tauri/Cargo.toml | cut -d'"' -f2)
-            echo "Version: $VERSION, App: $APP_NAME"
-            echo "This suggests Tauri's updater artifact generation may have failed."
-            echo "Check the build log above for signing errors."
+            PRODUCT_NAME=$(grep -m1 '"productName"' src-tauri/tauri.conf.json | cut -d'"' -f4)
+            TAR_GZ_DIR=$(dirname "$TAR_GZ")
+            TAR_GZ_FILE=$(basename "$TAR_GZ")
+            SIG_FILE=$(basename "$SIG")
+            
+            # Get the download URL (will be set by GitHub release)
+            DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$TAR_GZ_FILE"
+            
+            # Read signature
+            SIGNATURE=$(cat "$SIG" | base64 -w 0 2>/dev/null || cat "$SIG" | base64)
+            
+            # Create latest.json
+            LATEST_JSON="$TAR_GZ_DIR/latest.json"
+            cat > "$LATEST_JSON" <<EOF
+{
+  "version": "$VERSION",
+  "notes": "Release $VERSION",
+  "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "$SIGNATURE",
+      "url": "$DOWNLOAD_URL"
+    }
+  }
+}
+EOF
+            echo "Generated latest.json at: $LATEST_JSON"
+            echo "=== Generated latest.json contents ==="
+            cat "$LATEST_JSON"
           fi
           
           if [ -n "$LATEST_JSON" ]; then
