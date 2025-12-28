@@ -57,7 +57,7 @@ fn main() {
                             
                             let version = app.package_info().version.to_string();
                             let product_name = app.package_info().name.clone();
-                            let app_handle = app.handle().clone();
+                            let app_handle = app.clone();
                             
                             // Check for updates asynchronously
                             tauri::async_runtime::spawn(async move {
