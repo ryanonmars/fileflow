@@ -30,27 +30,18 @@ jobs:
 
       - name: Setup signing key
         run: |
-          mkdir -p $HOME/.tauri
-          KEY_FILE="$HOME/.tauri/fileflow.key"
-          # Decode base64 key from secret and write to file
-          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > "$KEY_FILE"
-          chmod 600 "$KEY_FILE"
-          echo "KEY_FILE=$KEY_FILE" >> $GITHUB_ENV
-          # Debug: Verify key file
-          echo "=== Key file path ==="
-          echo "$KEY_FILE"
-          echo "=== Key file first 100 chars ==="
-          head -c 100 "$KEY_FILE" || cat "$KEY_FILE" | head -c 100
-          echo ""
-          echo "=== Key file line count ==="
-          wc -l "$KEY_FILE" || echo "0"
-          echo "=== Key file exists? ==="
-          test -f "$KEY_FILE" && echo "YES" || echo "NO"
+          # Decode base64 key from secret and store as env var with proper newlines
+          KEY_CONTENT=$(echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d)
+          # Escape the key content for use in environment variable
+          KEY_CONTENT_ESCAPED=$(printf '%s\n' "$KEY_CONTENT" | sed ':a;N;$!ba;s/\n/\\n/g')
+          echo "TAURI_SIGNING_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+          printf '%s\n' "$KEY_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Build Tauri app
         run: npm run tauri:build
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ env.KEY_FILE }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload DMG artifact
