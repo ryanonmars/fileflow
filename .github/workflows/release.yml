@@ -31,9 +31,14 @@ jobs:
       - name: Setup signing key
         run: |
           mkdir -p ~/.tauri
-          # Write the raw key content to file (GitHub Secret contains the actual key content, not base64)
-          printf '%s\n' "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > ~/.tauri/fileflow.key
+          # Write the key content exactly as stored in the secret
+          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > ~/.tauri/fileflow.key
           chmod 600 ~/.tauri/fileflow.key
+          # Verify the key file format
+          echo "Key file first line:"
+          head -1 ~/.tauri/fileflow.key
+          echo "Key file line count:"
+          wc -l ~/.tauri/fileflow.key
 
       - name: Build Tauri app
         run: npm run tauri:build
