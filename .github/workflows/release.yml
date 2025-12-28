@@ -30,18 +30,19 @@ jobs:
 
       - name: Setup signing key
         run: |
-          # Decode base64 key from secret and store as env var with proper newlines
-          KEY_CONTENT=$(echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d)
-          # Escape the key content for use in environment variable
-          KEY_CONTENT_ESCAPED=$(printf '%s\n' "$KEY_CONTENT" | sed ':a;N;$!ba;s/\n/\\n/g')
-          echo "TAURI_SIGNING_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
-          printf '%s\n' "$KEY_CONTENT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          # Decode base64 key and write to file, then use file path
+          mkdir -p $HOME/.tauri
+          KEY_FILE="$HOME/.tauri/fileflow.key"
+          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > "$KEY_FILE"
+          # Ensure file ends with newline (Tauri might expect this)
+          echo "" >> "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          echo "KEY_FILE=$KEY_FILE" >> $GITHUB_ENV
 
       - name: Build Tauri app
         run: npm run tauri:build
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ env.KEY_FILE }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload DMG artifact
