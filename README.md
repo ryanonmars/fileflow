@@ -1,4 +1,4 @@
-# Folder Watcher
+# FileFlow
 
 A macOS app that monitors a designated folder and automatically organizes downloaded files by type into configured destination folders.
 
@@ -45,7 +45,7 @@ npm run tauri build
 ## Configuration
 
 Configuration is stored in your system's config directory:
-- macOS: `~/Library/Application Support/folder-watcher/config.json`
+- macOS: `~/Library/Application Support/FileFlow/config.json`
 
 The configuration includes:
 - `watched_folder`: Path to the folder being monitored
