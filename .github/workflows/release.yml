@@ -36,6 +36,16 @@ jobs:
           echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > "$KEY_FILE"
           chmod 600 "$KEY_FILE"
           echo "KEY_FILE=$KEY_FILE" >> $GITHUB_ENV
+          # Debug: Verify key file
+          echo "=== Key file path ==="
+          echo "$KEY_FILE"
+          echo "=== Key file first 100 chars ==="
+          head -c 100 "$KEY_FILE" || cat "$KEY_FILE" | head -c 100
+          echo ""
+          echo "=== Key file line count ==="
+          wc -l "$KEY_FILE" || echo "0"
+          echo "=== Key file exists? ==="
+          test -f "$KEY_FILE" && echo "YES" || echo "NO"
 
       - name: Build Tauri app
         run: npm run tauri:build
