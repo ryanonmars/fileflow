@@ -28,22 +28,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup signing key
-        run: |
-          mkdir -p ~/.tauri
-          # Write the key content exactly as stored in the secret
-          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > ~/.tauri/fileflow.key
-          chmod 600 ~/.tauri/fileflow.key
-          # Verify the key file format
-          echo "Key file first line:"
-          head -1 ~/.tauri/fileflow.key
-          echo "Key file line count:"
-          wc -l ~/.tauri/fileflow.key
-
       - name: Build Tauri app
         run: npm run tauri:build
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ~/.tauri/fileflow.key
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload DMG artifact
