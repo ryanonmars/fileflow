@@ -30,15 +30,27 @@ jobs:
 
       - name: Setup signing key
         run: |
-          # Store base64 key directly (Tauri will decode it)
-          # The secret already contains base64-encoded key
-          echo "Using base64-encoded key from secret directly"
+          # Verify signing key is set
+          if [ -z "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
+            echo "ERROR: TAURI_SIGNING_PRIVATE_KEY secret is not set!"
+            exit 1
+          fi
+          echo "Signing key is set (length: ${#TAURI_SIGNING_PRIVATE_KEY})"
+          if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" ]; then
+            echo "Signing key password is set"
+          else
+            echo "WARNING: TAURI_SIGNING_PRIVATE_KEY_PASSWORD is not set (key may be unencrypted)"
 
       - name: Build Tauri app
-        run: npm run tauri:build
+        run: npm run tauri:build 2>&1 | tee build.log
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        
+      - name: Check build output for errors
+        run: |
+          echo "=== Checking build log for signing/updater errors ==="
+          grep -i "sign\|updater\|latest.json" build.log || echo "No signing/updater messages found"
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
@@ -49,10 +61,15 @@ jobs:
       - name: List bundle directory
         run: |
           echo "=== Full bundle directory structure ==="
-          find src-tauri/target/release/bundle -type f | head -30
+          find src-tauri/target/release/bundle -type f | head -50
           echo ""
-          echo "=== Looking for update artifacts ==="
-          find src-tauri/target/release/bundle -type f \( -name "*.tar.gz" -o -name "*.sig" -o -name "latest.json" \) | head -20
+          echo "=== Looking for update artifacts (all locations) ==="
+          find src-tauri/target/release -type f \( -name "*.tar.gz" -o -name "*.sig" -o -name "latest.json" \) 2>/dev/null || true
+          echo ""
+          echo "=== Checking specific directories ==="
+          ls -la src-tauri/target/release/bundle/ || echo "bundle directory not found"
+          ls -la src-tauri/target/release/bundle/macos/ 2>/dev/null || echo "macos directory not found"
+          ls -la src-tauri/target/release/bundle/dmg/ 2>/dev/null || echo "dmg directory not found"
 
       - name: Upload update artifacts
         uses: actions/upload-artifact@v4
@@ -67,28 +84,40 @@ jobs:
       - name: Find and prepare update artifacts
         id: find-artifacts
         run: |
-          echo "=== Finding update artifacts ==="
-          LATEST_JSON=$(find src-tauri/target/release/bundle -name "latest.json" | head -1)
-          TAR_GZ=$(find src-tauri/target/release/bundle -name "*.tar.gz" | head -1)
-          SIG=$(find src-tauri/target/release/bundle -name "*.sig" | head -1)
+          echo "=== Finding update artifacts (searching all locations) ==="
+          LATEST_JSON=$(find src-tauri/target/release -name "latest.json" 2>/dev/null | head -1)
+          TAR_GZ=$(find src-tauri/target/release -name "*.tar.gz" 2>/dev/null | head -1)
+          SIG=$(find src-tauri/target/release -name "*.sig" 2>/dev/null | head -1)
+          
+          echo "Search results:"
+          echo "  latest.json: ${LATEST_JSON:-NOT FOUND}"
+          echo "  tar.gz: ${TAR_GZ:-NOT FOUND}"
+          echo "  sig: ${SIG:-NOT FOUND}"
           
           if [ -n "$LATEST_JSON" ]; then
             echo "Found latest.json: $LATEST_JSON"
             echo "latest_json=$LATEST_JSON" >> $GITHUB_OUTPUT
+            echo "=== latest.json contents ==="
             cat "$LATEST_JSON"
           else
             echo "ERROR: latest.json not found!"
+            echo "This usually means the signing key failed or createUpdaterArtifacts is not working."
+            echo "Check the build log above for signing errors."
             exit 1
           fi
           
           if [ -n "$TAR_GZ" ]; then
             echo "Found tar.gz: $TAR_GZ"
             echo "tar_gz=$TAR_GZ" >> $GITHUB_OUTPUT
+          else
+            echo "WARNING: tar.gz not found"
           fi
           
           if [ -n "$SIG" ]; then
             echo "Found sig: $SIG"
             echo "sig=$SIG" >> $GITHUB_OUTPUT
+          else
+            echo "WARNING: sig file not found"
           fi
 
       - name: Create GitHub Release
