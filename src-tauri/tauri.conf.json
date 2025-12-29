@@ -153,7 +153,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQwM0ZDQ0ZGQ0VGNTEyNjUKUldSbEV2WE8vOHcvMEluZVdOV2t3Q3U3Sy8ybG1aS3VRMVZnRTVydm52K0lmTUdvcVFaZVVmRTkK",
       "endpoints": [
-        "https://github.com/ryanonmars/fileflow/releases/download/v0.1.0/latest.json"
+        "https://github.com/ryanonmars/fileflow/releases/download/latest/latest.json"
       ]
     }
   }

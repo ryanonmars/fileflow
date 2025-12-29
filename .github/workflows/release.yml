@@ -167,3 +167,30 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create/Update 'latest' release
+        run: |
+          LATEST_JSON="${{ steps.find-artifacts.outputs.latest_json }}"
+          
+          # Delete existing 'latest' release if it exists
+          gh release delete latest --yes 2>/dev/null || true
+          
+          # Delete existing 'latest' tag if it exists
+          git tag -d latest 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+          
+          # Create new 'latest' tag pointing to current release commit
+          git fetch --tags
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          git tag -f latest $CURRENT_COMMIT
+          git push origin latest --force
+          
+          # Create new 'latest' release with the latest.json file
+          # The latest.json contains URLs pointing to the versioned release, which is correct
+          gh release create latest \
+            --title "Latest Release" \
+            --notes "This is the latest release. All app versions check this endpoint for updates." \
+            --target $CURRENT_COMMIT \
+            "$LATEST_JSON"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
