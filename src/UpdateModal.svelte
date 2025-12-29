@@ -33,6 +33,7 @@
     const unlistenError = await listen('update-error', (event) => {
       status = 'error';
       errorMessage = event.payload.message || 'Unknown error';
+      isInstalling = false; // Reset installing state on error
     });
 
     const unlistenInstalling = await listen('update-installing', () => {
@@ -72,11 +73,14 @@
 
   async function installUpdate() {
     try {
+      isInstalling = true;
       await invoke('install_update');
+      // Note: If successful, the app will restart, so we won't reach here
     } catch (err) {
       console.error('Failed to install update:', err);
       status = 'error';
       errorMessage = String(err);
+      isInstalling = false; // Reset installing state on error
     }
   }
 

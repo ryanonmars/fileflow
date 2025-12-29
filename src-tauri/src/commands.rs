@@ -358,6 +358,32 @@ pub fn get_app_info(app: tauri::AppHandle) -> Result<(String, String), String> {
 }
 
 #[tauri::command]
+pub fn open_url(url: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&url)
+            .output()
+            .map_err(|e| format!("Failed to open URL: {}", e))?;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", "start", &url])
+            .output()
+            .map_err(|e| format!("Failed to open URL: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&url)
+            .output()
+            .map_err(|e| format!("Failed to open URL: {}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn suppress_update_alert_for_days(days: i64) -> Result<(), String> {
     let mut config = crate::config::Config::load();
     config.suppress_update_alert_for_days(days);
@@ -433,10 +459,11 @@ pub async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
                         let _ = app.emit("update-installing", serde_json::json!({}));
                         
                         if let Err(e) = update.download_and_install(|_chunk_length, _content_length| {}, || {}).await {
+                            let error_msg = format!("Failed to install update: {}", e);
                             let _ = app.emit("update-error", serde_json::json!({
-                                "message": format!("Failed to install update: {}", e)
+                                "message": error_msg.clone()
                             }));
-                            return Err(format!("Failed to install update: {}", e));
+                            return Err(error_msg);
                         } else {
                             // Update installed successfully - restart the app
                             // The download_and_install should handle restart, but we'll ensure it happens
@@ -444,15 +471,27 @@ pub async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
                         }
                     }
                     Ok(None) => {
-                        Err("No update available".to_string())
+                        let error_msg = "No update available".to_string();
+                        let _ = app.emit("update-error", serde_json::json!({
+                            "message": error_msg.clone()
+                        }));
+                        return Err(error_msg);
                     }
                     Err(e) => {
-                        Err(format!("Unable to check for updates: {}", e))
+                        let error_msg = format!("Unable to check for updates: {}", e);
+                        let _ = app.emit("update-error", serde_json::json!({
+                            "message": error_msg.clone()
+                        }));
+                        return Err(error_msg);
                     }
                 }
             }
             Err(e) => {
-                Err(format!("Unable to initialize updater: {}", e))
+                let error_msg = format!("Unable to initialize updater: {}", e);
+                let _ = app.emit("update-error", serde_json::json!({
+                    "message": error_msg.clone()
+                }));
+                return Err(error_msg);
             }
         }
     }

@@ -264,6 +264,7 @@ fn main() {
             show_file_organization_modal,
             close_file_organization_modal,
             get_app_info,
+            open_url,
             check_for_updates,
             install_update,
             suppress_update_alert_for_days
