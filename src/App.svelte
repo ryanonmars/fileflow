@@ -2,7 +2,10 @@
   import { onMount } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { invoke } from '@tauri-apps/api/core';
+  import { listen } from '@tauri-apps/api/event';
   import FileOrganizationModal from './FileOrganizationModal.svelte';
+  import AboutModal from './AboutModal.svelte';
+  import UpdateModal from './UpdateModal.svelte';
   import appIcon from './app-icon.png';
 
   let error = '';
@@ -16,6 +19,7 @@
   let config = null;
   let organizationMode = 'auto';
   let launchAtLogin = false;
+  let autoCheckForUpdates = true;
 
   // Rules tab state
   const conditionTypes = [
@@ -36,6 +40,12 @@
   // Pending tab state
   let pendingFiles = [];
   let pollingInterval = null;
+  let showAbout = false;
+  let aboutVersion = '';
+  let aboutProductName = '';
+
+  let isAboutWindow = false;
+  let isUpdateWindow = false;
 
   onMount(async () => {
     const appWindow = getCurrentWindow();
@@ -43,10 +53,38 @@
     
     if (label === 'file-organization') {
       isModalWindow = true;
+    } else if (label === 'about') {
+      isAboutWindow = true;
+    } else if (label === 'update') {
+      isUpdateWindow = true;
     } else {
       appWindow.listen('tauri://close-requested', async () => {
         await appWindow.hide();
       });
+      
+      // Expose function for menu to call
+      window.showAboutDialog = (version, productName) => {
+        console.log('showAboutDialog called', version, productName);
+        aboutVersion = version;
+        aboutProductName = productName;
+        showAbout = true;
+      };
+      
+      // Also listen for event (backup)
+      const unlistenAbout = await listen('show-about', (event) => {
+        aboutVersion = event.payload.version;
+        aboutProductName = event.payload.productName;
+        showAbout = true;
+      });
+      
+      // Cleanup
+      return async () => {
+        await unlistenAbout();
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
+      };
+      
       await loadGeneralConfig();
       await loadRules();
       await loadPendingFiles();
@@ -75,6 +113,7 @@
       watchedFolder = config.watched_folder || '';
       organizationMode = await invoke('get_organization_mode');
       launchAtLogin = config.launch_at_login === true;
+      autoCheckForUpdates = config.auto_check_for_updates !== false;
       
       // Automatically start watching if a folder is configured
       if (watchedFolder) {
@@ -97,6 +136,7 @@
     try {
       if (config) {
         config.launch_at_login = launchAtLogin;
+        config.auto_check_for_updates = autoCheckForUpdates;
         await invoke('save_config', { config });
         handleSuccess('Settings saved');
       }
@@ -172,7 +212,7 @@
         config.watched_folder = '';
         await invoke('save_config', { config });
       }
-      handleSuccess('Cleared watched folder');
+      handleSuccess('Cleared monitored folder');
     } catch (err) {
       handleError(`Failed to clear folder: ${err}`);
     }
@@ -361,6 +401,10 @@
 
 {#if isModalWindow}
   <FileOrganizationModal />
+{:else if isAboutWindow}
+  <AboutModal />
+{:else if isUpdateWindow}
+  <UpdateModal />
 {:else}
   <div class="app-container">
     {#if error}
@@ -404,7 +448,7 @@
 
       {#if activeTab === 'general'}
         <div class="tab-content">
-          <h2>Watched Folder</h2>
+          <h2 class="monitored-folder-title">Monitored Folder</h2>
           
           <div class="form-group">
             <label for="watched-folder">Folder Path:</label>
@@ -435,12 +479,19 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
+            <div class="setting-item">
+              <label for="auto-check-updates">Automatically check for updates</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="auto-check-updates" bind:checked={autoCheckForUpdates} on:change={saveGeneralSettings} />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
           </div>
         </div>
       {:else if activeTab === 'rules'}
         <div class="tab-content">
           <div class="rules-header">
-            <h2>Organization Rules</h2>
+            <h2 class="monitored-folder-title">Organization Rules</h2>
             <button class="add-rule-btn" on:click={addRule}>+ Add Rule</button>
           </div>
           
@@ -551,7 +602,7 @@
         </div>
       {:else if activeTab === 'pending'}
         <div class="tab-content">
-          <h2>Pending Files</h2>
+          <h2 class="monitored-folder-title">Pending Files</h2>
           
           {#if pendingFiles.length === 0}
             <div class="empty-state">
@@ -583,6 +634,28 @@
           {/if}
         </div>
       {/if}
+    </div>
+  </div>
+{/if}
+
+{#if showAbout}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+  <div 
+    class="about-overlay" 
+    role="dialog" 
+    aria-modal="true"
+    aria-labelledby="about-title"
+    tabindex="-1"
+    on:click={() => showAbout = false} 
+    on:keydown={(e) => { if (e.key === 'Escape') showAbout = false; }}
+  >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div class="about-dialog" role="document" on:click|stopPropagation>
+      <img src={appIcon} alt="FileFlow" class="about-logo" />
+      <h2 id="about-title">{aboutProductName || 'FileFlow'}</h2>
+      <p class="about-version">Version {aboutVersion || '0.1.1'}</p>
+      <button class="about-close" on:click={() => showAbout = false}>OK</button>
     </div>
   </div>
 {/if}
@@ -696,6 +769,10 @@
     font-weight: 600;
     letter-spacing: -0.022em;
     color: rgba(0, 0, 0, 0.95);
+  }
+
+  .monitored-folder-title {
+    font-size: 16px;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -1305,5 +1382,83 @@
 
   .toggle-switch input:focus + .toggle-slider {
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  }
+
+  .about-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+
+  .about-dialog {
+    background: rgba(30, 30, 30, 0.95);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    min-width: 300px;
+    backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (prefers-color-scheme: light) {
+    .about-dialog {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .about-logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    display: block;
+  }
+
+  .about-dialog h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  @media (prefers-color-scheme: light) {
+    .about-dialog h2 {
+      color: rgba(0, 0, 0, 0.9);
+    }
+  }
+
+  .about-version {
+    margin: 0 0 24px 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  @media (prefers-color-scheme: light) {
+    .about-version {
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  .about-close {
+    background: #007AFF;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .about-close:hover {
+    background: #0056CC;
   }
 </style>

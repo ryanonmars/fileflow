@@ -27,6 +27,10 @@ dist-ssr
 src-tauri/target
 src-tauri/Cargo.lock
 
+# Environment variables
+.env
+.env.local
+
 
 
 

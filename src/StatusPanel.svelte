@@ -92,7 +92,7 @@
 </script>
 
 <section class="status-panel">
-  <h2>Watched Folder</h2>
+  <h2 class="monitored-folder-title">Monitored Folder</h2>
   
   <div class="folder-selector">
     <input type="text" bind:value={watchedFolder} placeholder="No folder selected" readonly />
@@ -139,6 +139,10 @@
     font-size: 1.1rem;
     font-weight: 500;
     color: #e0e0e0;
+  }
+
+  .monitored-folder-title {
+    font-size: 0.9rem;
   }
 
   .folder-selector {

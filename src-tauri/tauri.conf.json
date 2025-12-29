@@ -1,6 +1,6 @@
 {
   "productName": "FileFlow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.fileflow.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -26,6 +26,32 @@
         "label": "file-organization",
         "title": "File Organization",
         "width": 500,
+        "height": 300,
+        "resizable": false,
+        "fullscreen": false,
+        "visible": false,
+        "skipTaskbar": true,
+        "center": true,
+        "decorations": true,
+        "url": "index.html"
+      },
+      {
+        "label": "about",
+        "title": "About FileFlow",
+        "width": 350,
+        "height": 250,
+        "resizable": false,
+        "fullscreen": false,
+        "visible": false,
+        "skipTaskbar": true,
+        "center": true,
+        "decorations": true,
+        "url": "index.html"
+      },
+      {
+        "label": "update",
+        "title": "Updates",
+        "width": 400,
         "height": 300,
         "resizable": false,
         "fullscreen": false,
@@ -79,6 +105,16 @@
               "allow": ["**"]
             }
           ]
+        },
+        {
+          "identifier": "update-capability",
+          "description": "Update window capabilities",
+          "windows": ["update"],
+          "permissions": [
+            "core:default",
+            "core:event:allow-listen",
+            "core:event:allow-emit"
+          ]
         }
       ]
     },
@@ -117,7 +153,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQwM0ZDQ0ZGQ0VGNTEyNjUKUldSbEV2WE8vOHcvMEluZVdOV2t3Q3U3Sy8ybG1aS3VRMVZnRTVydm52K0lmTUdvcVFaZVVmRTkK",
       "endpoints": [
-        "https://github.com/ryanonmars/fileflow/releases/latest/download/latest.json"
+        "https://github.com/ryanonmars/fileflow/releases/download/v0.1.0/latest.json"
       ]
     }
   }

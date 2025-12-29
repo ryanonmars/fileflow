@@ -18,10 +18,11 @@ fn main() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let show_item = MenuItem::with_id(app, "show", "Show Settings", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "Settings", true, None::<&str>)?;
+            let update_item = MenuItem::with_id(app, "update", "Update", true, None::<&str>)?;
             let about_item = MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_item, &about_item, &quit_item])?;
+            let menu = Menu::with_items(app, &[&show_item, &update_item, &about_item, &quit_item])?;
 
             let tray_icon = {
                 let icon_bytes = include_bytes!("../icons/app-icon.png");
@@ -51,71 +52,18 @@ fn main() {
                                 let _ = window.set_focus();
                             }
                         }
-                        "about" => {
-                            use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-                            use tauri_plugin_updater::UpdaterExt;
-                            
-                            let version = app.package_info().version.to_string();
-                            let product_name = app.package_info().name.clone();
-                            let app_handle = app.clone();
-                            
-                            // Only check for updates in release mode
-                            #[cfg(not(debug_assertions))]
-                            {
-                                // Check for updates asynchronously
-                                tauri::async_runtime::spawn(async move {
-                                    let dialog = app_handle.dialog();
-                                    let updater_builder = app_handle.updater_builder();
-                                    
-                                    match updater_builder.build() {
-                                        Ok(updater) => {
-                                            match updater.check().await {
-                                                Ok(Some(update)) => {
-                                                    let message = format!(
-                                                        "{}\nVersion {}\n\nUpdate available: {}",
-                                                        product_name, version, update.version
-                                                    );
-                                                    dialog.message(&message)
-                                                        .kind(MessageDialogKind::Info)
-                                                        .title("About - Update Available")
-                                                        .show(|_| {});
-                                                }
-                                                Ok(None) => {
-                                                    let message = format!("{}\nVersion {}\n\nYou are running the latest version.", product_name, version);
-                                                    dialog.message(&message)
-                                                        .kind(MessageDialogKind::Info)
-                                                        .title("About")
-                                                        .show(|_| {});
-                                                }
-                                                Err(e) => {
-                                                    let message = format!("{}\nVersion {}\n\nUnable to check for updates.\nError: {}", product_name, version, e);
-                                                    dialog.message(&message)
-                                                        .kind(MessageDialogKind::Info)
-                                                        .title("About")
-                                                        .show(|_| {});
-                                                }
-                                            }
-                                        }
-                                        Err(e) => {
-                                            let message = format!("{}\nVersion {}\n\nUnable to initialize updater.\nError: {}", product_name, version, e);
-                                            dialog.message(&message)
-                                                .kind(MessageDialogKind::Info)
-                                                .title("About")
-                                                .show(|_| {});
-                                        }
-                                    }
-                                });
+                        "update" => {
+                            // Show the update window (separate window, like about)
+                            if let Some(window) = app.get_webview_window("update") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
                             }
-                            
-                            // In dev mode, just show version info
-                            #[cfg(debug_assertions)]
-                            {
-                                let dialog = app_handle.dialog();
-                                let message = format!("{}\nVersion {}\n\n(Development mode - update checking disabled)", product_name, version);
-                                dialog.message(&message)
-                                    .kind(MessageDialogKind::Info)
-                                    .title("About")
-                                    .show(|_| {});
+                        }
+                        "about" => {
+                            // Show the about window (separate window, like file-organization)
+                            if let Some(window) = app.get_webview_window("about") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
                             }
                         }
                         _ => {}
@@ -132,7 +80,7 @@ fn main() {
                 }
             });
 
-            // Ensure modal window exists - access it to trigger creation from config
+            // Ensure modal windows exist - access them to trigger creation from config
             if let Some(modal_window) = app.get_webview_window("file-organization") {
                 let modal_window_clone = modal_window.clone();
                 modal_window.on_window_event(move |event| {
@@ -141,11 +89,131 @@ fn main() {
                     }
                 });
             }
+            
+            if let Some(about_window) = app.get_webview_window("about") {
+                let about_window_clone = about_window.clone();
+                about_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        let _ = about_window_clone.hide();
+                        api.prevent_close();
+                    }
+                });
+            }
+            
+            if let Some(update_window) = app.get_webview_window("update") {
+                let update_window_clone = update_window.clone();
+                update_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        let _ = update_window_clone.hide();
+                        api.prevent_close();
+                    }
+                });
+            }
 
             let event_tx = init_watcher().map_err(|e| {
                 eprintln!("Failed to initialize watcher: {}", e);
                 e
             })?;
+
+            // Check for updates on startup if enabled
+            #[cfg(not(debug_assertions))]
+            {
+                let app_handle = app.handle().clone();
+                let config = crate::config::Config::load();
+                if config.auto_check_for_updates && config.should_show_update_alert() {
+                    tauri::async_runtime::spawn(async move {
+                        // Small delay to let app fully start
+                        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                        
+                        use tauri_plugin_updater::UpdaterExt;
+                        if let Ok(updater_builder) = app_handle.updater_builder().build() {
+                            if let Ok(Some(update)) = updater_builder.check().await {
+                                // Check again if we should show alert (might have changed)
+                                let config = crate::config::Config::load();
+                                if !config.should_show_update_alert() {
+                                    return;
+                                }
+                                
+                                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                                let dialog = app_handle.dialog();
+                                let app_handle_clone = app_handle.clone();
+                                let message = format!(
+                                    "Update available: Version {}\n\nGo to the Update menu to install it.",
+                                    update.version
+                                );
+                                dialog.message(&message)
+                                    .kind(MessageDialogKind::Question)
+                                    .title("Update Available")
+                                    .ok_label("OK")
+                                    .cancel_label("Ignore for 7 days")
+                                    .show(move |response| {
+                                        if !response {
+                                            // User clicked "Ignore for 7 days"
+                                            if let Err(e) = commands::suppress_update_alert_for_days(7) {
+                                                eprintln!("Failed to suppress update alert: {}", e);
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Start periodic update checking if enabled
+            #[cfg(not(debug_assertions))]
+            {
+                let app_handle = app.handle().clone();
+                let config = crate::config::Config::load();
+                if config.auto_check_for_updates {
+                    tauri::async_runtime::spawn(async move {
+                        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600)); // Check every hour
+                        loop {
+                            interval.tick().await;
+                            let config = crate::config::Config::load();
+                            if !config.auto_check_for_updates {
+                                break;
+                            }
+                            
+                            use tauri_plugin_updater::UpdaterExt;
+                            if let Ok(updater_builder) = app_handle.updater_builder().build() {
+                                if let Ok(Some(update)) = updater_builder.check().await {
+                                    // Emit event to show update available
+                                    let _ = app_handle.emit("update-available", serde_json::json!({
+                                        "version": update.version.to_string()
+                                    }));
+                                    
+                                    // Check if we should show alert
+                                    let config = crate::config::Config::load();
+                                    if config.should_show_update_alert() {
+                                        // Show dialog alert
+                                        use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                                        let dialog = app_handle.dialog();
+                                        let app_handle_clone = app_handle.clone();
+                                        let message = format!(
+                                            "Update available: Version {}\n\nGo to the Update menu to install it.",
+                                            update.version
+                                        );
+                                        dialog.message(&message)
+                                            .kind(MessageDialogKind::Question)
+                                            .title("Update Available")
+                                            .ok_label("OK")
+                                            .cancel_label("Ignore for 7 days")
+                                            .show(move |response| {
+                                                if !response {
+                                                    // User clicked "Ignore for 7 days"
+                                                    if let Err(e) = commands::suppress_update_alert_for_days(7) {
+                                                        eprintln!("Failed to suppress update alert: {}", e);
+                                                    }
+                                                }
+                                            });
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
 
             let app_handle = app.handle().clone();
             let mut rx = event_tx.subscribe();
@@ -200,7 +268,11 @@ fn main() {
             process_file_from_notification,
             open_settings_window,
             show_file_organization_modal,
-            close_file_organization_modal
+            close_file_organization_modal,
+            get_app_info,
+            check_for_updates,
+            install_update,
+            suppress_update_alert_for_days
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

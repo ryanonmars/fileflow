@@ -350,3 +350,109 @@ pub fn close_file_organization_modal(app: tauri::AppHandle) -> Result<(), String
     Ok(())
 }
 
+#[tauri::command]
+pub fn get_app_info(app: tauri::AppHandle) -> Result<(String, String), String> {
+    let version = app.package_info().version.to_string();
+    let name = app.package_info().name.clone();
+    Ok((version, name))
+}
+
+#[tauri::command]
+pub fn suppress_update_alert_for_days(days: i64) -> Result<(), String> {
+    let mut config = crate::config::Config::load();
+    config.suppress_update_alert_for_days(days);
+    config.save()?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn check_for_updates(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(debug_assertions)]
+    {
+        // In dev mode, emit update-latest after a small delay to show the checking state briefly
+        let app_clone = app.clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+            let _ = app_clone.emit("update-latest", serde_json::json!({}));
+        });
+        return Ok(());
+    }
+    
+    #[cfg(not(debug_assertions))]
+    {
+        use tauri_plugin_updater::UpdaterExt;
+        
+        let updater_builder = app.updater_builder();
+        
+        match updater_builder.build() {
+            Ok(updater) => {
+                match updater.check().await {
+                    Ok(Some(update)) => {
+                        let _ = app.emit("update-available", serde_json::json!({
+                            "version": update.version.to_string()
+                        }));
+                    }
+                    Ok(None) => {
+                        let _ = app.emit("update-latest", serde_json::json!({}));
+                    }
+                    Err(e) => {
+                        let _ = app.emit("update-error", serde_json::json!({
+                            "message": format!("Unable to check for updates: {}", e)
+                        }));
+                    }
+                }
+            }
+            Err(e) => {
+                let _ = app.emit("update-error", serde_json::json!({
+                    "message": format!("Unable to initialize updater: {}", e)
+                }));
+            }
+        }
+        
+        Ok(())
+    }
+}
+
+#[tauri::command]
+pub async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(debug_assertions)]
+    {
+        return Err("Update installation is disabled in development mode.".to_string());
+    }
+    
+    #[cfg(not(debug_assertions))]
+    {
+        use tauri_plugin_updater::UpdaterExt;
+        
+        let updater_builder = app.updater_builder();
+        
+        match updater_builder.build() {
+            Ok(updater) => {
+                match updater.check().await {
+                    Ok(Some(update)) => {
+                        let _ = app.emit("update-installing", serde_json::json!({}));
+                        
+                        if let Err(e) = update.download_and_install(|_chunk_length, _content_length| {}, || {}).await {
+                            let _ = app.emit("update-error", serde_json::json!({
+                                "message": format!("Failed to install update: {}", e)
+                            }));
+                            return Err(format!("Failed to install update: {}", e));
+                        } else {
+                            std::process::exit(0);
+                        }
+                    }
+                    Ok(None) => {
+                        Err("No update available".to_string())
+                    }
+                    Err(e) => {
+                        Err(format!("Unable to check for updates: {}", e))
+                    }
+                }
+            }
+            Err(e) => {
+                Err(format!("Unable to initialize updater: {}", e))
+            }
+        }
+    }
+}
+

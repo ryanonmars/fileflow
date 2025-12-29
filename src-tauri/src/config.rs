@@ -48,6 +48,10 @@ pub struct Config {
     pub show_menu_bar_icon: bool,
     #[serde(default)]
     pub launch_at_login: bool,
+    #[serde(default)]
+    pub auto_check_for_updates: bool,
+    #[serde(default)]
+    pub update_alert_suppress_until: Option<i64>, // Unix timestamp - suppress alerts until this time
 }
 
 fn default_show_menu_bar_icon() -> bool {
@@ -67,6 +71,8 @@ impl Default for Config {
             mappings: std::collections::HashMap::new(),
             show_menu_bar_icon: true,
             launch_at_login: false,
+            auto_check_for_updates: true,
+            update_alert_suppress_until: None,
         }
     }
 }
@@ -117,6 +123,27 @@ impl Config {
             }
         }
         None
+    }
+    
+    pub fn should_show_update_alert(&self) -> bool {
+        if let Some(suppress_until) = self.update_alert_suppress_until {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64;
+            now >= suppress_until
+        } else {
+            true
+        }
+    }
+    
+    pub fn suppress_update_alert_for_days(&mut self, days: i64) {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let seconds_in_days = days * 24 * 60 * 60;
+        self.update_alert_suppress_until = Some(now + seconds_in_days);
     }
 }
 
