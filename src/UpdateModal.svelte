@@ -152,11 +152,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
-    padding: 32px;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 24px;
+    padding-top: 32px;
     background: rgba(30, 30, 30, 0.95);
     color: rgba(255, 255, 255, 0.9);
+    box-sizing: border-box;
   }
 
   @media (prefers-color-scheme: light) {
@@ -167,16 +169,16 @@
   }
 
   .update-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-    border-radius: 15px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    border-radius: 12px;
   }
 
   .update-container h2 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
-    margin: 0 0 12px 0;
+    margin: 0 0 8px 0;
   }
 
   .update-message {
@@ -200,9 +202,9 @@
   }
 
   .update-submessage {
-    font-size: 13px;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.6);
-    margin: 0 0 24px 0;
+    margin: 0 0 16px 0;
     text-align: center;
   }
 
@@ -214,19 +216,23 @@
 
   .update-buttons {
     display: flex;
-    gap: 12px;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 8px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .update-btn {
     background: rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.2s ease;
+    width: 100%;
   }
 
   .update-btn:hover:not(:disabled) {

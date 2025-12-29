@@ -74,30 +74,28 @@ LATEST_JSON="src-tauri/target/release/bundle/macos/latest.json"
 TAR_GZ="src-tauri/target/release/bundle/macos/FileFlow.app.tar.gz"
 SIG="src-tauri/target/release/bundle/macos/FileFlow.app.tar.gz.sig"
 
-if [ -f "$LATEST_JSON" ]; then
-    echo "  ✓ latest.json found"
-    cat "$LATEST_JSON"
-else
-    echo "  ✗ latest.json not found - generating it..."
-    
-    if [ ! -f "$TAR_GZ" ] || [ ! -f "$SIG" ]; then
-        echo "  ERROR: Cannot generate latest.json - missing tar.gz or sig file"
-        exit 1
-    fi
-    
-    # Get version from tauri.conf.json
-    VERSION=$(grep -m1 '"version"' src-tauri/tauri.conf.json | cut -d'"' -f4)
-    TAR_GZ_FILE=$(basename "$TAR_GZ")
-    PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-    
-    # Read signature and base64 encode it
-    SIGNATURE=$(cat "$SIG" | base64)
-    
-    # Generate latest.json
-    # Note: The URL will be set when uploaded to GitHub releases
-    DOWNLOAD_URL="https://github.com/ryanonmars/fileflow/releases/download/v${VERSION}/${TAR_GZ_FILE}"
-    
-    cat > "$LATEST_JSON" <<EOF
+if [ ! -f "$TAR_GZ" ] || [ ! -f "$SIG" ]; then
+    echo "  ERROR: Cannot generate latest.json - missing tar.gz or sig file"
+    exit 1
+fi
+
+# Always regenerate latest.json to ensure it has the correct version
+echo "  Regenerating latest.json with current version..."
+
+# Get version from tauri.conf.json
+VERSION=$(grep -m1 '"version"' src-tauri/tauri.conf.json | cut -d'"' -f4)
+TAR_GZ_FILE=$(basename "$TAR_GZ")
+PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# Read signature - the .sig file content should be used directly (it's already base64)
+# Remove any trailing newlines/whitespace
+SIGNATURE=$(cat "$SIG" | tr -d '\n' | tr -d ' ')
+
+# Generate latest.json
+# URL points to "latest" release since all versions check that endpoint
+DOWNLOAD_URL="https://github.com/ryanonmars/fileflow/releases/download/latest/${TAR_GZ_FILE}"
+
+cat > "$LATEST_JSON" <<EOF
 {
   "version": "${VERSION}",
   "notes": "Release ${VERSION}",
@@ -110,12 +108,11 @@ else
   }
 }
 EOF
-    
-    echo "  ✓ Generated latest.json"
-    echo ""
-    echo "=== latest.json contents ==="
-    cat "$LATEST_JSON"
-fi
+
+echo "  ✓ Generated latest.json"
+echo ""
+echo "=== latest.json contents ==="
+cat "$LATEST_JSON"
 
 echo ""
 echo "⚠️  IMPORTANT: After downloading from GitHub, users need to remove quarantine:"

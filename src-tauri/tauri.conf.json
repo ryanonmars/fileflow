@@ -52,7 +52,7 @@
         "label": "update",
         "title": "Updates",
         "width": 400,
-        "height": 300,
+        "height": 380,
         "resizable": false,
         "fullscreen": false,
         "visible": false,

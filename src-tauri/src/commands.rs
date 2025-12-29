@@ -438,7 +438,9 @@ pub async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
                             }));
                             return Err(format!("Failed to install update: {}", e));
                         } else {
-                            std::process::exit(0);
+                            // Update installed successfully - restart the app
+                            // The download_and_install should handle restart, but we'll ensure it happens
+                            let _ = app.restart();
                         }
                     }
                     Ok(None) => {
