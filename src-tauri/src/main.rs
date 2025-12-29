@@ -73,6 +73,19 @@ fn main() {
                 .build(app)?;
 
             let window = app.get_webview_window("main").unwrap();
+            
+            // Focus and bring window to front on launch
+            // Use a small delay to ensure window is fully initialized
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.unminimize();
+                }
+            });
+            
             let window_clone = window.clone();
             window.on_window_event(move |event| {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
