@@ -6,6 +6,7 @@ mod file_watcher;
 use commands::*;
 use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
+use tauri::Emitter;
 use tauri::menu::{Menu, MenuItem};
 
 fn main() {
@@ -136,24 +137,14 @@ fn main() {
                                 
                                 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
                                 let dialog = app_handle.dialog();
-                                let app_handle_clone = app_handle.clone();
                                 let message = format!(
-                                    "Update available: Version {}\n\nGo to the Update menu to install it.",
+                                    "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
                                     update.version
                                 );
                                 dialog.message(&message)
-                                    .kind(MessageDialogKind::Question)
+                                    .kind(MessageDialogKind::Info)
                                     .title("Update Available")
-                                    .ok_label("OK")
-                                    .cancel_label("Ignore for 7 days")
-                                    .show(move |response| {
-                                        if !response {
-                                            // User clicked "Ignore for 7 days"
-                                            if let Err(e) = commands::suppress_update_alert_for_days(7) {
-                                                eprintln!("Failed to suppress update alert: {}", e);
-                                            }
-                                        }
-                                    });
+                                    .show(|_| {});
                             }
                         }
                     });
@@ -189,24 +180,14 @@ fn main() {
                                         // Show dialog alert
                                         use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
                                         let dialog = app_handle.dialog();
-                                        let app_handle_clone = app_handle.clone();
                                         let message = format!(
-                                            "Update available: Version {}\n\nGo to the Update menu to install it.",
+                                            "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
                                             update.version
                                         );
                                         dialog.message(&message)
-                                            .kind(MessageDialogKind::Question)
+                                            .kind(MessageDialogKind::Info)
                                             .title("Update Available")
-                                            .ok_label("OK")
-                                            .cancel_label("Ignore for 7 days")
-                                            .show(move |response| {
-                                                if !response {
-                                                    // User clicked "Ignore for 7 days"
-                                                    if let Err(e) = commands::suppress_update_alert_for_days(7) {
-                                                        eprintln!("Failed to suppress update alert: {}", e);
-                                                    }
-                                                }
-                                            });
+                                            .show(|_| {});
                                     }
                                 }
                             }

@@ -96,6 +96,15 @@
       errorMessage = String(err);
     }
   }
+
+  async function ignoreFor7Days() {
+    try {
+      await invoke('suppress_update_alert_for_days', { days: 7 });
+      await closeWindow();
+    } catch (err) {
+      console.error('Failed to suppress update alert:', err);
+    }
+  }
 </script>
 
 <div class="update-container">
@@ -122,6 +131,9 @@
       </button>
       <button class="update-btn" on:click={closeWindow} disabled={isInstalling}>
         Later
+      </button>
+      <button class="update-btn" on:click={ignoreFor7Days} disabled={isInstalling}>
+        Ignore for 7 days
       </button>
     </div>
   {:else if status === 'latest'}
