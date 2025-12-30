@@ -267,7 +267,8 @@ fn main() {
             open_url,
             check_for_updates,
             install_update,
-            suppress_update_alert_for_days
+            suppress_update_alert_for_days,
+            close_update_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

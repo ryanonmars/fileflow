@@ -354,6 +354,14 @@ pub fn close_file_organization_modal(app: tauri::AppHandle) -> Result<(), String
 }
 
 #[tauri::command]
+pub fn close_update_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("update") {
+        window.hide().map_err(|e| format!("Failed to hide update window: {}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_app_info(app: tauri::AppHandle) -> Result<(String, String), String> {
     let version = app.package_info().version.to_string();
     let name = app.package_info().name.clone();
@@ -398,11 +406,14 @@ pub fn suppress_update_alert_for_days(days: i64) -> Result<(), String> {
 pub async fn check_for_updates(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(debug_assertions)]
     {
-        // In dev mode, emit update-latest after a small delay to show the checking state briefly
+        // In dev mode, simulate an update being available for testing
         let app_clone = app.clone();
         tauri::async_runtime::spawn(async move {
             tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-            let _ = app_clone.emit("update-latest", serde_json::json!({}));
+            // Simulate update available for testing buttons
+            let _ = app_clone.emit("update-available", serde_json::json!({
+                "version": "0.1.6"
+            }));
         });
         return Ok(());
     }

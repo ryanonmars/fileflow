@@ -10,9 +10,10 @@
   let errorMessage = '';
   let isInstalling = false;
   let autoCheckEnabled = false;
+  let appWindow = null;
 
   onMount(async () => {
-    const appWindow = getCurrentWindow();
+    appWindow = getCurrentWindow();
     
     // Listen for close event - hide instead of close so window can be reopened
     appWindow.listen('tauri://close-requested', async (event) => {
@@ -86,10 +87,15 @@
 
   async function closeWindow() {
     try {
-      const appWindow = getCurrentWindow();
-      await appWindow.hide();
+      await invoke('close_update_window');
     } catch (err) {
-      console.error('Failed to close window:', err);
+      // Fallback to direct window hide if command fails
+      try {
+        const window = getCurrentWindow();
+        await window.hide();
+      } catch (e) {
+        // Ignore - window might already be closed
+      }
     }
   }
 
@@ -107,10 +113,12 @@
 
   async function ignoreFor7Days() {
     try {
+      console.log('[UpdateModal] ignoreFor7Days called');
       await invoke('suppress_update_alert_for_days', { days: 7 });
+      console.log('[UpdateModal] suppress_update_alert_for_days succeeded');
       await closeWindow();
     } catch (err) {
-      console.error('Failed to suppress update alert:', err);
+      console.error('[UpdateModal] Failed to suppress update alert:', err);
       // Still try to close the window even if suppress fails
       await closeWindow();
     }
@@ -139,10 +147,10 @@
           Update
         {/if}
       </button>
-      <button class="update-btn" on:click={closeWindow} disabled={isInstalling}>
+      <button class="update-btn" on:click|preventDefault|stopPropagation={closeWindow} disabled={isInstalling}>
         Later
       </button>
-      <button class="update-btn" on:click={ignoreFor7Days} disabled={isInstalling}>
+      <button class="update-btn" on:click|preventDefault|stopPropagation={ignoreFor7Days} disabled={isInstalling}>
         Ignore for 7 days
       </button>
     </div>
