@@ -64,7 +64,6 @@
       
       // Expose function for menu to call
       window.showAboutDialog = (version, productName) => {
-        console.log('showAboutDialog called', version, productName);
         aboutVersion = version;
         aboutProductName = productName;
         showAbout = true;

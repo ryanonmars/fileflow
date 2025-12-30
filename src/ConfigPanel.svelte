@@ -25,10 +25,8 @@
   let editingName = null;
 
   function toggleCollapse(ruleId) {
-    console.log('Toggle collapse for rule:', ruleId, 'Current state:', collapsedRules[ruleId]);
     collapsedRules[ruleId] = !collapsedRules[ruleId];
     collapsedRules = collapsedRules;
-    console.log('New state:', collapsedRules[ruleId]);
   }
 
   onMount(async () => {

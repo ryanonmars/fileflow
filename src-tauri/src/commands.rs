@@ -11,44 +11,21 @@ static WATCHER: Mutex<Option<Arc<Mutex<FileWatcher>>>> = Mutex::new(None);
 static MODAL_SHOWING: Mutex<bool> = Mutex::new(false);
 
 pub fn init_watcher() -> Result<broadcast::Sender<String>, String> {
-    eprintln!("init_watcher() called");
     let (tx, _) = broadcast::channel(100);
     let watcher = FileWatcher::new(tx.clone())?;
     let watcher_arc = Arc::new(Mutex::new(watcher));
     *WATCHER.lock().unwrap() = Some(watcher_arc);
-    eprintln!("init_watcher() completed successfully");
     Ok(tx)
 }
 
 #[tauri::command]
 pub fn get_config() -> Result<Config, String> {
-    eprintln!("[COMMAND] ========== get_config() CALLED ==========");
-    let config = Config::load();
-    eprintln!("[COMMAND] get_config() returning:");
-    eprintln!("[COMMAND]   watched_folder={:?}", config.watched_folder);
-    eprintln!("[COMMAND]   organization_mode={}", config.organization_mode);
-    eprintln!("[COMMAND]   rules count={}", config.rules.len());
-    
-    // Serialize to see what JSON looks like
-    if let Ok(json) = serde_json::to_string(&config) {
-        eprintln!("[COMMAND]   JSON (first 200 chars): {}", &json[..json.len().min(200)]);
-    }
-    
-    Ok(config)
+    Ok(Config::load())
 }
 
 #[tauri::command]
 pub fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), String> {
-    eprintln!("[COMMAND] ========== save_config() CALLED ==========");
-    eprintln!("[COMMAND] watched_folder={:?}", config.watched_folder);
-    eprintln!("[COMMAND] organization_mode={}", config.organization_mode);
-    eprintln!("[COMMAND] rules count={}", config.rules.len());
-    
-    config.save().map_err(|e| {
-        eprintln!("[COMMAND] ❌ ERROR saving config: {}", e);
-        e
-    })?;
-    eprintln!("[COMMAND] ✅ Config saved successfully");
+    config.save()?;
 
     if let Some(watcher_arc) = WATCHER.lock().unwrap().as_ref() {
         let watcher = watcher_arc.lock().unwrap();
@@ -166,45 +143,25 @@ fn set_launch_at_login(_enabled: bool) -> Result<(), String> {
 
 #[tauri::command]
 pub fn start_watching(watched_folder: String) -> Result<(), String> {
-    eprintln!("[COMMAND] ========== start_watching CALLED ==========");
-    eprintln!("[COMMAND] watched_folder parameter: '{}'", watched_folder);
-    eprintln!("[COMMAND] watched_folder length: {}", watched_folder.len());
-    eprintln!("[COMMAND] watched_folder is_empty: {}", watched_folder.is_empty());
-    
     let path = Path::new(&watched_folder);
-    eprintln!("[COMMAND] Path exists: {}", path.exists());
-    
     if !path.exists() {
-        eprintln!("[COMMAND] Path does not exist, creating: {}", path.display());
         std::fs::create_dir_all(path)
             .map_err(|e| format!("Failed to create watched folder: {}", e))?;
     }
 
     let mut watcher_guard = WATCHER.lock().unwrap();
     if watcher_guard.is_none() {
-        eprintln!("[COMMAND] Watcher is None, reinitializing...");
         // Reinitialize if it was destroyed
         let (tx, _) = broadcast::channel(100);
         let watcher = FileWatcher::new(tx.clone())?;
         *watcher_guard = Some(Arc::new(Mutex::new(watcher)));
-        eprintln!("[COMMAND] Watcher reinitialized");
     }
 
     if let Some(watcher_arc) = watcher_guard.as_ref() {
         let mut watcher = watcher_arc.lock().unwrap();
-        eprintln!("[COMMAND] Calling watcher.watch() for path: {}", path.display());
-        match watcher.watch(path) {
-            Ok(_) => {
-                eprintln!("[COMMAND] ✅ Successfully started watching: {}", path.display());
-                Ok(())
-            }
-            Err(e) => {
-                eprintln!("[COMMAND] ❌ ERROR watching path: {}", e);
-                Err(e)
-            }
-        }
+        watcher.watch(path)?;
+        Ok(())
     } else {
-        eprintln!("[COMMAND] ❌ ERROR: Watcher not initialized");
         Err("Watcher not initialized".to_string())
     }
 }
@@ -226,25 +183,13 @@ pub fn get_organization_mode() -> Result<String, String> {
 
 #[tauri::command]
 pub fn set_organization_mode(mode: String) -> Result<(), String> {
-    eprintln!("[COMMAND] ========== set_organization_mode() CALLED ==========");
-    eprintln!("[COMMAND] mode parameter: '{}'", mode);
-    
     if mode != "auto" && mode != "ask" && mode != "both" {
-        eprintln!("[COMMAND] ❌ ERROR: Invalid organization mode");
         return Err("Invalid organization mode. Must be 'auto', 'ask', or 'both'".to_string());
     }
 
     let mut config = Config::load();
-    eprintln!("[COMMAND] Current config - watched_folder: {:?}, organization_mode: {}", 
-        config.watched_folder, config.organization_mode);
     config.organization_mode = mode.clone();
-    eprintln!("[COMMAND] Setting organization_mode to: {}", mode);
-    
-    config.save().map_err(|e| {
-        eprintln!("[COMMAND] ❌ ERROR saving config: {}", e);
-        e
-    })?;
-    eprintln!("[COMMAND] ✅ Config saved successfully with organization_mode: {}", mode);
+    config.save()?;
 
     if let Some(watcher_arc) = WATCHER.lock().unwrap().as_ref() {
         let watcher = watcher_arc.lock().unwrap();
