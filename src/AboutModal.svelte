@@ -33,16 +33,16 @@
   <img src={appIcon} alt="FileFlow" class="about-logo" />
   <h2>{productName}</h2>
   <p class="about-version">Version {version}</p>
-  <a href="javascript:void(0)" class="about-link" on:click|preventDefault={async () => {
+  <button class="about-link" on:click={async () => {
     try {
-      await invoke('open_url', { url: 'https://raw.githubusercontent.com/ryanonmars/fileflow/main/RELEASE_NOTES.html' });
+      await invoke('open_url', { url: 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/ryanonmars/fileflow/main/RELEASE_NOTES.html' });
     } catch (err) {
       console.error('Failed to open URL:', err);
     }
   }}>
     Release Notes
-  </a>
-  <a href="https://github.com/ryanonmars/fileflow" class="about-link" on:click|preventDefault={async () => {
+  </button>
+  <button class="about-link" on:click={async () => {
     try {
       await invoke('open_url', { url: 'https://github.com/ryanonmars/fileflow' });
     } catch (err) {
@@ -50,7 +50,7 @@
     }
   }}>
     GitHub Repository
-  </a>
+  </button>
 </div>
 
 <style>
@@ -103,6 +103,11 @@
     text-decoration: none;
     margin-top: 8px;
     transition: opacity 0.2s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
   }
 
   .about-link:hover {
