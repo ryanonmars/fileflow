@@ -35,7 +35,8 @@
   <p class="about-version">Version {version}</p>
   <button class="about-link" on:click={async () => {
     try {
-      await invoke('open_url', { url: 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/ryanonmars/fileflow/main/RELEASE_NOTES.html' });
+      const timestamp = Date.now();
+      await invoke('open_url', { url: `https://htmlpreview.github.io/?https://raw.githubusercontent.com/ryanonmars/fileflow/main/RELEASE_NOTES.html?t=${timestamp}` });
     } catch (err) {
       console.error('Failed to open URL:', err);
     }
