@@ -17,7 +17,7 @@
   let watchedFolder = '';
   let isWatching = false;
   let config = null;
-  let organizationMode = 'auto';
+  let organizationMode = 'both';
   let launchAtLogin = false;
   let autoCheckForUpdates = true;
 

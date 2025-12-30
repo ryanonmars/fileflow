@@ -59,14 +59,14 @@ fn default_show_menu_bar_icon() -> bool {
 }
 
 fn default_organization_mode() -> String {
-    "auto".to_string()
+    "both".to_string()
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
             watched_folder: None,
-            organization_mode: "auto".to_string(),
+            organization_mode: "both".to_string(),
             rules: Vec::new(),
             mappings: std::collections::HashMap::new(),
             show_menu_bar_icon: true,
