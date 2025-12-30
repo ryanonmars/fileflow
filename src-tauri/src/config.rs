@@ -80,23 +80,37 @@ impl Default for Config {
 impl Config {
     pub fn load() -> Self {
         let config_path = Self::config_path();
+        eprintln!("[CONFIG] Loading config from: {}", config_path.display());
         if config_path.exists() {
             if let Ok(content) = fs::read_to_string(&config_path) {
+                eprintln!("[CONFIG] Config file content length: {} bytes", content.len());
                 if let Ok(config) = serde_json::from_str::<Config>(&content) {
+                    eprintln!("[CONFIG] Config loaded successfully. watched_folder: {:?}, organization_mode: {}", 
+                        config.watched_folder, config.organization_mode);
                     return config;
+                } else {
+                    eprintln!("[CONFIG] ERROR: Failed to parse config JSON");
                 }
+            } else {
+                eprintln!("[CONFIG] ERROR: Failed to read config file");
             }
+        } else {
+            eprintln!("[CONFIG] Config file does not exist, using defaults");
         }
         Self::default()
     }
 
     pub fn save(&self) -> Result<(), String> {
         let config_path = Self::config_path();
+        eprintln!("[CONFIG] Saving config to: {}", config_path.display());
+        eprintln!("[CONFIG] watched_folder: {:?}, organization_mode: {}", 
+            self.watched_folder, self.organization_mode);
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent).map_err(|e| format!("Failed to create config directory: {}", e))?;
         }
         let json = serde_json::to_string_pretty(self).map_err(|e| format!("Failed to serialize config: {}", e))?;
         fs::write(&config_path, json).map_err(|e| format!("Failed to write config: {}", e))?;
+        eprintln!("[CONFIG] Config saved successfully");
         Ok(())
     }
 

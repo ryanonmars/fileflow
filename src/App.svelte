@@ -77,20 +77,26 @@
         showAbout = true;
       });
       
-      // Cleanup
+      // Load config and initialize
+      try {
+        await loadGeneralConfig();
+        await loadRules();
+        await loadPendingFiles();
+        pollingInterval = setInterval(async () => {
+          await loadPendingFiles();
+        }, 2000);
+      } catch (err) {
+        console.error('Error during initialization:', err);
+        handleError(`Initialization error: ${err}`);
+      }
+      
+      // Cleanup function
       return async () => {
         await unlistenAbout();
         if (pollingInterval) {
           clearInterval(pollingInterval);
         }
       };
-      
-      await loadGeneralConfig();
-      await loadRules();
-      await loadPendingFiles();
-      pollingInterval = setInterval(async () => {
-        await loadPendingFiles();
-      }, 2000);
     }
   });
 
@@ -110,13 +116,24 @@
   async function loadGeneralConfig() {
     try {
       config = await invoke('get_config');
-      watchedFolder = config.watched_folder || '';
+      
+      // Handle watched_folder - JSON serializes Option<String> as string or null
+      const rawFolder = config?.watched_folder;
+      if (rawFolder && (typeof rawFolder === 'string')) {
+        watchedFolder = rawFolder.trim();
+      } else {
+        watchedFolder = '';
+      }
+      
+      // Force reactivity update
+      watchedFolder = watchedFolder;
+      
       organizationMode = await invoke('get_organization_mode');
-      launchAtLogin = config.launch_at_login === true;
-      autoCheckForUpdates = config.auto_check_for_updates !== false;
+      launchAtLogin = config?.launch_at_login === true;
+      autoCheckForUpdates = config?.auto_check_for_updates !== false;
       
       // Automatically start watching if a folder is configured
-      if (watchedFolder) {
+      if (watchedFolder && watchedFolder.length > 0) {
         try {
           await invoke('start_watching', { watchedFolder });
           isWatching = true;
@@ -128,6 +145,7 @@
         isWatching = false;
       }
     } catch (err) {
+      console.error('Error loading config:', err);
       handleError(`Failed to load config: ${err}`);
     }
   }
@@ -137,6 +155,8 @@
       if (config) {
         config.launch_at_login = launchAtLogin;
         config.auto_check_for_updates = autoCheckForUpdates;
+        config.watched_folder = watchedFolder || null;
+        config.organization_mode = organizationMode;
         await invoke('save_config', { config });
         handleSuccess('Settings saved');
       }
@@ -178,11 +198,12 @@
       
       if (selected) {
         watchedFolder = Array.isArray(selected) ? selected[0] : selected;
-        if (config) {
-          config.watched_folder = watchedFolder;
-          await invoke('save_config', { config });
-          await startWatching();
-        }
+        // Reload config to ensure we have latest values
+        const currentConfig = await invoke('get_config');
+        currentConfig.watched_folder = watchedFolder;
+        currentConfig.organization_mode = organizationMode;
+        await invoke('save_config', { config: currentConfig });
+        await startWatching();
       }
     } catch (err) {
       handleError(`Failed to select folder: ${err}`);

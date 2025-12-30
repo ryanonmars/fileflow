@@ -11,6 +11,7 @@ pub struct FileWatcher {
     config: Arc<Mutex<Config>>,
     event_tx: broadcast::Sender<String>,
     pending_files: Arc<Mutex<Vec<PendingFile>>>,
+    watched_path: Arc<Mutex<Option<std::path::PathBuf>>>,
 }
 
 impl FileWatcher {
@@ -21,9 +22,11 @@ impl FileWatcher {
         let pending_files_clone = pending_files.clone();
         let event_tx_clone = event_tx.clone();
 
+        eprintln!("Creating file watcher...");
         let watcher = notify::recommended_watcher(move |result: Result<Event, notify::Error>| {
             match result {
                 Ok(event) => {
+                    eprintln!("[WATCHER] File watcher event received: {:?}", event.kind);
                     // Watch for Create and Modify events (downloads often create temp files then rename)
                     // We'll process any Create event, and Modify events that might indicate file completion
                     let should_process = match &event.kind {
@@ -35,6 +38,7 @@ impl FileWatcher {
                         _ => false,
                     };
                     if should_process {
+                        eprintln!("Processing file event for paths: {:?}", event.paths);
                         for path in event.paths {
                             // Skip .download files and other temporary download files
                             if let Some(ext) = path.extension() {
@@ -49,10 +53,12 @@ impl FileWatcher {
                             let event_tx_clone2 = event_tx_clone.clone();
                             
                             std::thread::spawn(move || {
+                                eprintln!("Processing file: {}", path_clone.display());
                                 // Wait a bit longer for downloads to complete
                                 std::thread::sleep(std::time::Duration::from_millis(500));
                                 // Check if it's a file after the delay
                                 if path_clone.exists() && path_clone.is_file() {
+                                    eprintln!("File confirmed: {}", path_clone.display());
                                         let config = config_clone2.lock().unwrap();
                                         let mode = config.organization_mode.as_str();
                                         
@@ -188,11 +194,13 @@ impl FileWatcher {
         })
         .map_err(|e| format!("Failed to create watcher: {}", e))?;
 
+        eprintln!("FileWatcher created successfully");
         Ok(FileWatcher {
             watcher,
             config,
             event_tx,
             pending_files,
+            watched_path: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -251,14 +259,43 @@ impl FileWatcher {
     }
 
     pub fn watch(&mut self, path: &Path) -> Result<(), String> {
+        eprintln!("[WATCHER] watch() called for path: {}", path.display());
+        let path_buf = path.to_path_buf();
+        
+        // Unwatch old path if different
+        let mut watched_path_guard = self.watched_path.lock().unwrap();
+        if let Some(old_path) = watched_path_guard.as_ref() {
+            if old_path != path {
+                eprintln!("[WATCHER] Unwatching old path: {}", old_path.display());
+                let _ = self.watcher.unwatch(old_path);
+            }
+        }
+        
+        eprintln!("[WATCHER] Calling notify watcher.watch() for: {}", path.display());
         self.watcher
             .watch(path, RecursiveMode::NonRecursive)
-            .map_err(|e| format!("Failed to watch path: {}", e))?;
+            .map_err(|e| {
+                eprintln!("[WATCHER] ERROR: watcher.watch() failed: {:?}", e);
+                format!("Failed to watch path: {}", e)
+            })?;
+        
+        *watched_path_guard = Some(path_buf);
+        eprintln!("[WATCHER] Successfully watching: {}", path.display());
         Ok(())
     }
 
     pub fn update_config(&self, config: Config) -> Result<(), String> {
         *self.config.lock().unwrap() = config;
+        Ok(())
+    }
+    
+    pub fn unwatch_current(&mut self) -> Result<(), String> {
+        let mut watched_path_guard = self.watched_path.lock().unwrap();
+        if let Some(path) = watched_path_guard.take() {
+            self.watcher
+                .unwatch(&path)
+                .map_err(|e| format!("Failed to unwatch path: {}", e))?;
+        }
         Ok(())
     }
 
