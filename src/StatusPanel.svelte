@@ -129,6 +129,7 @@
   .status-panel {
     background: #252525;
     padding: 0.75rem 1rem;
+    padding-bottom: 0.5rem;
     border-radius: 4px;
     margin-bottom: 0.75rem;
     border: 1px solid #333;
@@ -197,7 +198,8 @@
     border-radius: 3px;
     border: 1px solid #333;
     font-size: 0.9em;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
   }
 
   .dot {

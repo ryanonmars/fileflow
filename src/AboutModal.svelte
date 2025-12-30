@@ -33,6 +33,15 @@
   <img src={appIcon} alt="FileFlow" class="about-logo" />
   <h2>{productName}</h2>
   <p class="about-version">Version {version}</p>
+  <a href="javascript:void(0)" class="about-link" on:click|preventDefault={async () => {
+    try {
+      await invoke('open_url', { url: 'https://raw.githubusercontent.com/ryanonmars/fileflow/main/RELEASE_NOTES.html' });
+    } catch (err) {
+      console.error('Failed to open URL:', err);
+    }
+  }}>
+    Release Notes
+  </a>
   <a href="https://github.com/ryanonmars/fileflow" class="about-link" on:click|preventDefault={async () => {
     try {
       await invoke('open_url', { url: 'https://github.com/ryanonmars/fileflow' });
@@ -66,14 +75,14 @@
   .about-logo {
     width: 80px;
     height: 80px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     border-radius: 15px;
   }
 
   .about-container h2 {
     font-size: 24px;
     font-weight: 600;
-    margin: 0 0 8px 0;
+    margin: -4px 0 8px 0;
   }
 
   .about-version {

@@ -468,8 +468,26 @@ pub async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
                             return Err(error_msg);
                         } else {
                             // Update installed successfully - restart the app
-                            // The download_and_install should handle restart, but we'll ensure it happens
-                            let _ = app.restart();
+                            // Give a small delay to ensure the update is fully installed
+                            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                            
+                            // Try to restart - if it fails, log but don't error since update is installed
+                            if let Err(e) = app.restart() {
+                                eprintln!("Warning: Failed to restart app after update: {}", e);
+                                // On macOS, we might need to use a different approach
+                                #[cfg(target_os = "macos")]
+                                {
+                                    // Try using launchctl or open command as fallback
+                                    if let Ok(exe_path) = std::env::current_exe() {
+                                        let _ = std::process::Command::new("open")
+                                            .arg("-a")
+                                            .arg(&exe_path)
+                                            .spawn();
+                                    }
+                                }
+                            }
+                            // Return success - update is installed, restart will happen
+                            Ok(())
                         }
                     }
                     Ok(None) => {

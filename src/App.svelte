@@ -478,18 +478,17 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <div class="form-group clear-folder-group">
             <button on:click={clearFolder} disabled={!watchedFolder}>
               Clear Folder
             </button>
+            {#if isWatching}
+              <div class="status-indicator">
+                <span class="dot active"></span>
+                <span>Monitoring: {watchedFolder}</span>
+              </div>
+            {/if}
           </div>
-
-          {#if isWatching}
-            <div class="status-indicator">
-              <span class="dot active"></span>
-              <span>Watching: {watchedFolder}</span>
-            </div>
-          {/if}
 
           <div class="settings-section">
             <div class="setting-item">
@@ -793,6 +792,7 @@
 
   .monitored-folder-title {
     font-size: 16px;
+    margin-bottom: 8px;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -829,6 +829,12 @@
 
   .form-group {
     margin-bottom: 20px;
+  }
+
+  .clear-folder-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .form-group label {
@@ -947,7 +953,7 @@
     gap: 8px;
     font-size: 13px;
     color: rgba(0, 0, 0, 0.7);
-    margin-top: 8px;
+    margin: 0;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -1313,7 +1319,7 @@
   }
 
   .settings-section {
-    margin-top: 32px;
+    margin-top: 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     padding: 8px 0;

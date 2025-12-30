@@ -85,8 +85,12 @@
   }
 
   async function closeWindow() {
-    const appWindow = getCurrentWindow();
-    await appWindow.hide();
+    try {
+      const appWindow = getCurrentWindow();
+      await appWindow.hide();
+    } catch (err) {
+      console.error('Failed to close window:', err);
+    }
   }
 
   async function checkForUpdates() {
@@ -107,6 +111,8 @@
       await closeWindow();
     } catch (err) {
       console.error('Failed to suppress update alert:', err);
+      // Still try to close the window even if suppress fails
+      await closeWindow();
     }
   }
 </script>
