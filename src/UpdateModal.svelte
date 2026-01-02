@@ -11,6 +11,7 @@
   let isInstalling = false;
   let autoCheckEnabled = false;
   let appWindow = null;
+  let hasReceivedUpdateEvent = false;
 
   onMount(async () => {
     appWindow = getCurrentWindow();
@@ -23,6 +24,7 @@
 
     // Listen for update status events
     const unlistenAvailable = await listen('update-available', (event) => {
+      hasReceivedUpdateEvent = true;
       status = 'available';
       updateVersion = event.payload.version || '';
     });
@@ -46,16 +48,20 @@
       const config = await invoke('get_config');
       autoCheckEnabled = config?.auto_check_for_updates !== false;
       
-      // Only auto-check if enabled
-      if (autoCheckEnabled) {
+      // Only auto-check if enabled AND we haven't already received an update event
+      // (if window was opened automatically with an update, we don't need to check again)
+      if (autoCheckEnabled && !hasReceivedUpdateEvent) {
         setTimeout(async () => {
-          try {
-            status = 'checking';
-            await invoke('check_for_updates');
-          } catch (err) {
-            console.error('Failed to check for updates:', err);
-            status = 'error';
-            errorMessage = String(err);
+          // Check again if we received an event while waiting
+          if (!hasReceivedUpdateEvent) {
+            try {
+              status = 'checking';
+              await invoke('check_for_updates');
+            } catch (err) {
+              console.error('Failed to check for updates:', err);
+              status = 'error';
+              errorMessage = String(err);
+            }
           }
         }, 100);
       }

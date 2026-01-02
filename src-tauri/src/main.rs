@@ -140,33 +140,66 @@ fn main() {
                         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                         
                         use tauri_plugin_updater::UpdaterExt;
-                        if let Ok(updater_builder) = app_handle.updater_builder().build() {
-                            if let Ok(Some(update)) = updater_builder.check().await {
-                                // Emit event to show update available in UpdateModal
-                                let _ = app_handle.emit("update-available", serde_json::json!({
-                                    "version": update.version.to_string()
-                                }));
-                                
-                                // Show the update window
-                                if let Some(update_window) = app_handle.get_webview_window("update") {
-                                    let _ = update_window.show();
-                                    let _ = update_window.set_focus();
+                        match app_handle.updater_builder().build() {
+                            Ok(updater_builder) => {
+                                match updater_builder.check().await {
+                                    Ok(Some(update)) => {
+                                        eprintln!("[UPDATE] Update available: {}", update.version);
+                                        
+                                        // Show the update window first (always, even if alert is suppressed)
+                                        if let Some(update_window) = app_handle.get_webview_window("update") {
+                                            eprintln!("[UPDATE] Showing update window");
+                                            let _ = update_window.show();
+                                            let _ = update_window.set_focus();
+                                            
+                                            // Small delay to ensure window is fully loaded before emitting event
+                                            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                                            
+                                            // Emit event to show update available in UpdateModal
+                                            let _ = update_window.emit("update-available", serde_json::json!({
+                                                "version": update.version.to_string()
+                                            }));
+                                            
+                                            // Also emit globally as backup
+                                            let _ = app_handle.emit("update-available", serde_json::json!({
+                                                "version": update.version.to_string()
+                                            }));
+                                        } else {
+                                            eprintln!("[UPDATE] Update window not found!");
+                                            // Emit globally if window not found
+                                            let _ = app_handle.emit("update-available", serde_json::json!({
+                                                "version": update.version.to_string()
+                                            }));
+                                        }
+                                        
+                                        // Show dialog alert only if not suppressed
+                                        let config = crate::config::Config::load();
+                                        if config.should_show_update_alert() {
+                                            eprintln!("[UPDATE] Showing alert dialog");
+                                            use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                                            let dialog = app_handle.dialog();
+                                            let message = format!(
+                                                "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
+                                                update.version
+                                            );
+                                            dialog.message(&message)
+                                                .kind(MessageDialogKind::Info)
+                                                .title("Update Available")
+                                                .show(|_| {});
+                                        } else {
+                                            eprintln!("[UPDATE] Alert suppressed, but window should be visible");
+                                        }
+                                    }
+                                    Ok(None) => {
+                                        eprintln!("[UPDATE] No update available");
+                                    }
+                                    Err(e) => {
+                                        eprintln!("[UPDATE] Error checking for updates: {}", e);
+                                    }
                                 }
-                                
-                                // Show dialog alert only if not suppressed
-                                let config = crate::config::Config::load();
-                                if config.should_show_update_alert() {
-                                    use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-                                    let dialog = app_handle.dialog();
-                                    let message = format!(
-                                        "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
-                                        update.version
-                                    );
-                                    dialog.message(&message)
-                                        .kind(MessageDialogKind::Info)
-                                        .title("Update Available")
-                                        .show(|_| {});
-                                }
+                            }
+                            Err(e) => {
+                                eprintln!("[UPDATE] Error building updater: {}", e);
                             }
                         }
                     });
@@ -189,34 +222,67 @@ fn main() {
                             }
                             
                             use tauri_plugin_updater::UpdaterExt;
-                            if let Ok(updater_builder) = app_handle.updater_builder().build() {
-                                if let Ok(Some(update)) = updater_builder.check().await {
-                                    // Emit event to show update available
-                                    let _ = app_handle.emit("update-available", serde_json::json!({
-                                        "version": update.version.to_string()
-                                    }));
-                                    
-                                    // Show the update window
-                                    if let Some(update_window) = app_handle.get_webview_window("update") {
-                                        let _ = update_window.show();
-                                        let _ = update_window.set_focus();
+                            match app_handle.updater_builder().build() {
+                                Ok(updater_builder) => {
+                                    match updater_builder.check().await {
+                                        Ok(Some(update)) => {
+                                            eprintln!("[UPDATE] Periodic check: Update available: {}", update.version);
+                                            
+                                            // Show the update window first (always, even if alert is suppressed)
+                                            if let Some(update_window) = app_handle.get_webview_window("update") {
+                                                eprintln!("[UPDATE] Periodic check: Showing update window");
+                                                let _ = update_window.show();
+                                                let _ = update_window.set_focus();
+                                                
+                                                // Small delay to ensure window is fully loaded before emitting event
+                                                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                                                
+                                                // Emit event to show update available in UpdateModal
+                                                let _ = update_window.emit("update-available", serde_json::json!({
+                                                    "version": update.version.to_string()
+                                                }));
+                                                
+                                                // Also emit globally as backup
+                                                let _ = app_handle.emit("update-available", serde_json::json!({
+                                                    "version": update.version.to_string()
+                                                }));
+                                            } else {
+                                                eprintln!("[UPDATE] Periodic check: Update window not found!");
+                                                // Emit globally if window not found
+                                                let _ = app_handle.emit("update-available", serde_json::json!({
+                                                    "version": update.version.to_string()
+                                                }));
+                                            }
+                                            
+                                            // Check if we should show alert
+                                            let config = crate::config::Config::load();
+                                            if config.should_show_update_alert() {
+                                                eprintln!("[UPDATE] Periodic check: Showing alert dialog");
+                                                // Show dialog alert
+                                                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                                                let dialog = app_handle.dialog();
+                                                let message = format!(
+                                                    "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
+                                                    update.version
+                                                );
+                                                dialog.message(&message)
+                                                    .kind(MessageDialogKind::Info)
+                                                    .title("Update Available")
+                                                    .show(|_| {});
+                                            } else {
+                                                eprintln!("[UPDATE] Periodic check: Alert suppressed, but window should be visible");
+                                            }
+                                        }
+                                        Ok(None) => {
+                                            eprintln!("[UPDATE] Periodic check: No update available");
+                                        }
+                                        Err(e) => {
+                                            eprintln!("[UPDATE] Periodic check: Error checking for updates: {}", e);
+                                        }
                                     }
-                                    
-                                    // Check if we should show alert
-                                    let config = crate::config::Config::load();
-                                    if config.should_show_update_alert() {
-                                        // Show dialog alert
-                                        use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-                                        let dialog = app_handle.dialog();
-                                        let message = format!(
-                                            "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
-                                            update.version
-                                        );
-                                        dialog.message(&message)
-                                            .kind(MessageDialogKind::Info)
-                                            .title("Update Available")
-                                            .show(|_| {});
-                                    }
+                                }
+                                Err(e) => {
+                                    eprintln!("[UPDATE] Periodic check: Error building updater: {}", e);
                                 }
                             }
                         }
