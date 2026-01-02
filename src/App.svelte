@@ -32,7 +32,7 @@
     { value: 'after', label: 'After' },
     { value: 'on', label: 'On' }
   ];
-  const commonFileTypes = ['7z', 'aac', 'app', 'avi', 'dmg', 'doc', 'docx', 'exe', 'gif', 'iso', 'jpg', 'jpeg', 'mov', 'mp3', 'mp4', 'pdf', 'png', 'ppt', 'pptx', 'rar', 'svg', 'txt', 'wav', 'webp', 'xls', 'xlsx', 'zip', '*'];
+  const commonFileTypes = ['7z', 'aac', 'app', 'avi', 'dmg', 'doc', 'docx', 'exe', 'gif', 'iso', 'jpg', 'jpeg', 'mov', 'mp3', 'mp4', 'pdf', 'pkg', 'png', 'ppt', 'pptx', 'rar', 'svg', 'txt', 'wav', 'webp', 'xls', 'xlsx', 'zip', '*'];
   let rules = [];
   let collapsedRules = {};
   let editingName = null;
