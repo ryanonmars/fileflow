@@ -77,6 +77,26 @@
       onError(`Failed to skip file: ${err}`);
     }
   }
+
+  async function deleteFile(filePath) {
+    const { ask } = await import('@tauri-apps/plugin-dialog');
+    const confirmed = await ask('Are you sure you want to delete this file? This action cannot be undone.', {
+      title: 'Delete File',
+      kind: 'warning'
+    });
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    try {
+      await invoke('delete_pending_file', { filePath: filePath });
+      await loadPendingFiles();
+      onSuccess('File deleted');
+    } catch (err) {
+      onError(`Failed to delete file: ${err}`);
+    }
+  }
 </script>
 
 <section class="pending-panel">
@@ -109,6 +129,9 @@
             </button>
             <button class="skip-btn" on:click={() => skipFile(file.path)}>
               Skip
+            </button>
+            <button class="delete-btn" on:click={() => deleteFile(file.path)}>
+              Delete
             </button>
           </div>
         </div>
@@ -229,6 +252,21 @@
   .skip-btn:hover {
     background: #2a2a2a;
     border-color: #555;
+  }
+
+  .delete-btn {
+    background: transparent;
+    color: #ff453a;
+    border: 1px solid #ff453a;
+    padding: 0.4rem 0.75rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85em;
+  }
+
+  .delete-btn:hover {
+    background: #ff453a;
+    color: white;
   }
 </style>
 

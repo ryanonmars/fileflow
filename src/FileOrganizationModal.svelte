@@ -118,6 +118,35 @@
     }
   }
 
+  async function deleteFile(filePath) {
+    if (processingFile === filePath) return;
+    
+    const { ask } = await import('@tauri-apps/plugin-dialog');
+    const confirmed = await ask('Are you sure you want to delete this file? This action cannot be undone.', {
+      title: 'Delete File',
+      kind: 'warning'
+    });
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    processingFile = filePath;
+
+    try {
+      await invoke('delete_pending_file', { filePath: filePath });
+      // Clear the rename for this file
+      delete renamedFiles[filePath];
+      renamedFiles = renamedFiles;
+      await loadPendingFiles();
+    } catch (err) {
+      console.error('Failed to delete file:', err);
+      alert('Error: ' + err);
+    } finally {
+      processingFile = null;
+    }
+  }
+
   async function skipAll() {
     if (processingAll || pendingFiles.length === 0) return;
     processingAll = true;
@@ -219,6 +248,13 @@
               disabled={processingFile === file.path || processingAll}
             >
               Skip
+            </button>
+            <button 
+              class="delete-btn" 
+              on:click={() => deleteFile(file.path)}
+              disabled={processingFile === file.path || processingAll}
+            >
+              Delete
             </button>
           </div>
         </div>
@@ -494,6 +530,45 @@
 
   .skip-btn:active:not(:disabled) {
     transform: translateY(0);
+  }
+
+  .delete-btn {
+    background: transparent;
+    color: #ff3b30;
+    border: 0.5px solid #ff3b30;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .delete-btn {
+      color: #ff453a;
+      border-color: #ff453a;
+    }
+  }
+
+  .delete-btn:hover:not(:disabled) {
+    background: #ff3b30;
+    color: white;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .delete-btn:hover:not(:disabled) {
+      background: #ff453a;
+      color: white;
+    }
+  }
+
+  .delete-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .delete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .close-btn {

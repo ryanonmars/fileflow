@@ -17,7 +17,7 @@
     { value: 'on', label: 'On' }
   ];
 
-  const commonFileTypes = ['jpg', 'jpeg', 'png', 'gif', 'txt', 'webp', 'svg', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'mp4', 'mp3', '*'];
+  const commonFileTypes = ['7z', 'aac', 'app', 'avi', 'dmg', 'doc', 'docx', 'exe', 'gif', 'iso', 'jpg', 'jpeg', 'mov', 'mp3', 'mp4', 'pdf', 'png', 'ppt', 'pptx', 'rar', 'svg', 'txt', 'wav', 'webp', 'xls', 'xlsx', 'zip', '*'];
 
   let config = { watched_folder: null, rules: [] };
   let rules = [];

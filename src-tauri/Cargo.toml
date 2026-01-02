@@ -1,6 +1,6 @@
 [package]
 name = "folder-watcher"
-version = "0.1.6"
+version = "0.1.8"
 description = "A folder watcher that organizes files by type"
 license = ""
 repository = ""

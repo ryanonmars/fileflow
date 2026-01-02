@@ -272,6 +272,7 @@ fn main() {
             set_organization_mode,
             get_pending_files,
             process_pending_file,
+            delete_pending_file,
             move_file_manual,
             show_file_notification,
             process_file_from_notification,

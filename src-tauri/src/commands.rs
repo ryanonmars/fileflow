@@ -235,6 +235,41 @@ pub fn process_pending_file(app: tauri::AppHandle, filePath: String, destination
 }
 
 #[tauri::command]
+pub fn delete_pending_file(app: tauri::AppHandle, filePath: String) -> Result<(), String> {
+    use std::fs;
+    use std::path::PathBuf;
+    
+    let path = PathBuf::from(&filePath);
+    
+    // Delete the file
+    if path.exists() {
+        fs::remove_file(&path)
+            .map_err(|e| format!("Failed to delete file: {}", e))?;
+    }
+    
+    // Remove from pending files
+    if let Some(watcher_arc) = WATCHER.lock().unwrap().as_ref() {
+        let watcher = watcher_arc.lock().unwrap();
+        watcher.remove_pending_file(&filePath)?;
+        
+        // Refresh the file list in the modal
+        if let Some(window) = app.get_webview_window("file-organization") {
+            let js_code = "if (window.refreshFileList) { window.refreshFileList(); }";
+            let _ = window.eval(js_code);
+        }
+        
+        // If no more pending files, close the modal
+        let pending_count = watcher.get_pending_files().len();
+        if pending_count == 0 {
+            *MODAL_SHOWING.lock().unwrap() = false;
+            let _ = close_file_organization_modal(app);
+        }
+    }
+    
+    Ok(())
+}
+
+#[tauri::command]
 pub fn move_file_manual(file_path: String, destination: String) -> Result<String, String> {
     use crate::file_organizer::organize_file_to_destination;
     use std::path::PathBuf;

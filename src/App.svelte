@@ -32,7 +32,7 @@
     { value: 'after', label: 'After' },
     { value: 'on', label: 'On' }
   ];
-  const commonFileTypes = ['jpg', 'jpeg', 'png', 'gif', 'txt', 'webp', 'svg', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'mp4', 'mp3', '*'];
+  const commonFileTypes = ['7z', 'aac', 'app', 'avi', 'dmg', 'doc', 'docx', 'exe', 'gif', 'iso', 'jpg', 'jpeg', 'mov', 'mp3', 'mp4', 'pdf', 'png', 'ppt', 'pptx', 'rar', 'svg', 'txt', 'wav', 'webp', 'xls', 'xlsx', 'zip', '*'];
   let rules = [];
   let collapsedRules = {};
   let editingName = null;
@@ -417,6 +417,26 @@
       handleError(`Failed to skip file: ${err}`);
     }
   }
+
+  async function deleteFile(filePath) {
+    const { ask } = await import('@tauri-apps/plugin-dialog');
+    const confirmed = await ask('Are you sure you want to delete this file? This action cannot be undone.', {
+      title: 'Delete File',
+      kind: 'warning'
+    });
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    try {
+      await invoke('delete_pending_file', { filePath: filePath });
+      await loadPendingFiles();
+      handleSuccess('File deleted');
+    } catch (err) {
+      handleError(`Failed to delete file: ${err}`);
+    }
+  }
 </script>
 
 {#if isModalWindow}
@@ -645,6 +665,9 @@
                     </button>
                     <button class="skip-btn" on:click={() => skipFile(file.path)}>
                       Skip
+                    </button>
+                    <button class="delete-btn" on:click={() => deleteFile(file.path)}>
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -1315,6 +1338,36 @@
     .skip-btn:hover {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  .delete-btn {
+    background: transparent;
+    color: #ff3b30;
+    border: 0.5px solid #ff3b30;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .delete-btn {
+      color: #ff453a;
+      border-color: #ff453a;
+    }
+  }
+
+  .delete-btn:hover {
+    background: #ff3b30;
+    color: white;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .delete-btn:hover {
+      background: #ff453a;
+      color: white;
     }
   }
 
