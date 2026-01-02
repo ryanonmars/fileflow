@@ -147,6 +147,12 @@ fn main() {
                                     "version": update.version.to_string()
                                 }));
                                 
+                                // Show the update window
+                                if let Some(update_window) = app_handle.get_webview_window("update") {
+                                    let _ = update_window.show();
+                                    let _ = update_window.set_focus();
+                                }
+                                
                                 // Show dialog alert only if not suppressed
                                 let config = crate::config::Config::load();
                                 if config.should_show_update_alert() {
@@ -189,6 +195,12 @@ fn main() {
                                     let _ = app_handle.emit("update-available", serde_json::json!({
                                         "version": update.version.to_string()
                                     }));
+                                    
+                                    // Show the update window
+                                    if let Some(update_window) = app_handle.get_webview_window("update") {
+                                        let _ = update_window.show();
+                                        let _ = update_window.set_focus();
+                                    }
                                     
                                     // Check if we should show alert
                                     let config = crate::config::Config::load();
