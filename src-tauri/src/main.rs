@@ -134,7 +134,7 @@ fn main() {
             {
                 let app_handle = app.handle().clone();
                 let config = crate::config::Config::load();
-                if config.auto_check_for_updates && config.should_show_update_alert() {
+                if config.auto_check_for_updates {
                     tauri::async_runtime::spawn(async move {
                         // Small delay to let app fully start
                         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
@@ -142,22 +142,25 @@ fn main() {
                         use tauri_plugin_updater::UpdaterExt;
                         if let Ok(updater_builder) = app_handle.updater_builder().build() {
                             if let Ok(Some(update)) = updater_builder.check().await {
-                                // Check again if we should show alert (might have changed)
-                                let config = crate::config::Config::load();
-                                if !config.should_show_update_alert() {
-                                    return;
-                                }
+                                // Emit event to show update available in UpdateModal
+                                let _ = app_handle.emit("update-available", serde_json::json!({
+                                    "version": update.version.to_string()
+                                }));
                                 
-                                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-                                let dialog = app_handle.dialog();
-                                let message = format!(
-                                    "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
-                                    update.version
-                                );
-                                dialog.message(&message)
-                                    .kind(MessageDialogKind::Info)
-                                    .title("Update Available")
-                                    .show(|_| {});
+                                // Show dialog alert only if not suppressed
+                                let config = crate::config::Config::load();
+                                if config.should_show_update_alert() {
+                                    use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                                    let dialog = app_handle.dialog();
+                                    let message = format!(
+                                        "Update available: Version {}\n\nGo to the Update menu to install it.\n\n(You can ignore this alert for 7 days from the Update menu.)",
+                                        update.version
+                                    );
+                                    dialog.message(&message)
+                                        .kind(MessageDialogKind::Info)
+                                        .title("Update Available")
+                                        .show(|_| {});
+                                }
                             }
                         }
                     });
